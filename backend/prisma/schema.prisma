@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      Role     @default(USER)
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  solves    Solve[]
+}
+
+model Challenge {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  points      Int
+  category    Category
+  difficulty  Difficulty
+  flag        String
+  dockerImage String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  solves      Solve[]
+}
+
+model Solve {
+  id          String    @id @default(uuid())
+  userId      String
+  challengeId String
+  solvedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  WEB
+  CRYPTO
+  FORENSICS
+  RESEAU
+  STEGANO
+}
+
+enum Difficulty {
+  EZ
+  FACILE
+  MOYEN
+  DIFFICILE
+  HARD
+}

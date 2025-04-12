@@ -16,7 +16,7 @@ export default function AuthPage() {
     
     if (!email) {
       newErrors.email = "L'email est requis";
-    } else if (!/^\S+@\S+$/.test(email)) {
+    } else if (!/^[^\s@]{1,64}@[^\s@]{1,255}$/.test(email)) {
       newErrors.email = "Email invalide";
     }
 

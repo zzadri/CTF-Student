@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { defaultAvatars } from '../utils/avatars';
 import { LoginBody, RegisterBody } from '../interfaces/auth.interface';
 
@@ -41,8 +42,9 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Sélectionner un avatar aléatoire
-    const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+    // Sélectionner un avatar aléatoire de manière cryptographiquement sûre
+    const randomIndex = crypto.randomInt(defaultAvatars.length);
+    const randomAvatar = defaultAvatars[randomIndex];
 
     // Création de l'utilisateur avec la langue par défaut (fr)
     const user = await prisma.user.create({

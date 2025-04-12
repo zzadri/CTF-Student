@@ -14,19 +14,23 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  username  String     @unique
-  password  String
-  avatar    String     @default("")
-  role      Role       @default(USER)
-  score     Int        @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  solves    Solve[]
-  challenges Challenge[]
-  language  Language @relation(fields: [languageId], references: [id])
-  languageId String  @default("fr")
+  id            String         @id @default(uuid())
+  email         String        @unique
+  username      String        @unique
+  password      String
+  avatar        String?
+  role          String        @default("USER")
+  score         Int           @default(0)
+  isBlocked     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  solves        Solve[]
+  challenges    Challenge[]
+  languageId    String        @default("fr")
+  language      Language      @relation(fields: [languageId], references: [id])
+  notifications Notification[]
+
+  @@index([languageId])
 }
 
 model Category {
@@ -71,6 +75,18 @@ model Language {
   id       String @id
   name     String
   users    User[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  type      String   @default("ADMIN")
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum Role {

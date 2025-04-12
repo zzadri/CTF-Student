@@ -5,12 +5,19 @@ import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/category';
 import userRoutes from './routes/userRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { specs } from './config/swagger';
 import path from 'path';
+import { tokenBlacklist } from './utils/tokenBlacklist';
 
 const prisma = new PrismaClient();
 const app = express();
+
+// Initialiser la blacklist au démarrage
+tokenBlacklist.initialize().catch(error => {
+  console.error('Erreur lors de l\'initialisation de la blacklist:', error);
+});
 
 // Désactiver l'en-tête X-Powered-By pour des raisons de sécurité
 app.disable('x-powered-by');
@@ -38,6 +45,7 @@ app.use('/api-backend-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Servir les fichiers statiques
 app.use('/avatars', express.static(path.join(__dirname, '../public/avatars')));

@@ -320,4 +320,88 @@ export const getPublicProfile = async (req: Request, res: Response) => {
       message: 'Erreur lors de la récupération du profil public'
     });
   }
+};
+
+export const getNotifications = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Non autorisé'
+      });
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where: { 
+        userId,
+        read: false
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      select: {
+        id: true,
+        message: true,
+        type: true,
+        createdAt: true
+      }
+    });
+
+    return res.json({
+      success: true,
+      notifications
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des notifications:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération des notifications'
+    });
+  }
+};
+
+export const markNotificationAsRead = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const { notificationId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Non autorisé'
+      });
+    }
+
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id: notificationId,
+        userId
+      }
+    });
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: 'Notification non trouvée'
+      });
+    }
+
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { read: true }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Notification marquée comme lue'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la notification:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la mise à jour de la notification'
+    });
+  }
 }; 

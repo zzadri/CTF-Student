@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getLeaderboard, updateProfile, getProfile, getLanguages, getPublicProfile } from '../controllers/userController';
+import { getLeaderboard, updateProfile, getProfile, getLanguages, getPublicProfile, getNotifications, markNotificationAsRead } from '../controllers/userController';
 import { authenticateToken } from '../middleware/authMiddleware';
 import { upload, processImage } from '../middleware/uploadMiddleware';
 
@@ -190,5 +190,62 @@ router.get('/leaderboard', authenticateToken, getLeaderboard);
  */
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, upload.single('avatar'), processImage, updateProfile);
+
+/**
+ * @swagger
+ * /users/notifications:
+ *   get:
+ *     summary: Récupérer les notifications non lues de l'utilisateur
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 notifications:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ */
+router.get('/notifications', authenticateToken, getNotifications);
+
+/**
+ * @swagger
+ * /users/notifications/{notificationId}:
+ *   put:
+ *     summary: Marquer une notification comme lue
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: notificationId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Notification marquée comme lue
+ *       404:
+ *         description: Notification non trouvée
+ */
+router.put('/notifications/:notificationId', authenticateToken, markNotificationAsRead);
 
 export default router; 

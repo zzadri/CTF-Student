@@ -2,27 +2,24 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { defaultAvatars } from '../utils/avatars';
 import { LoginBody, RegisterBody } from '../interfaces/auth.interface';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
-
-const setAuthCookie = (res: Response, token: string) => {
-  res.cookie('auth_token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 24 * 60 * 60 * 1000, // 24 heures
-  });
-};
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
 
 export const register = async (req: Request<{}, {}, RegisterBody>, res: Response) => {
   try {
     const { email, password, username } = req.body;
 
-    // Vérifier si l'utilisateur existe déjà
+    // Vérification des données
+    if (!email || !password || !username) {
+      return res.status(400).json({
+        success: false,
+        message: "Tous les champs sont requis"
+      });
+    }
+
+    // Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -33,52 +30,79 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
     });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
-        message: "Un utilisateur avec cet email ou ce nom d'utilisateur existe déjà"
+        message: existingUser.email === email ? "Cet email est déjà utilisé" : "Ce nom d'utilisateur est déjà utilisé"
+      });
+    }
+
+    // Vérifier si la langue française existe
+    const frLanguage = await prisma.language.findUnique({
+      where: { id: 'fr' }
+    });
+
+    if (!frLanguage) {
+      // Créer la langue française si elle n'existe pas
+      await prisma.language.create({
+        data: {
+          id: 'fr',
+          name: 'Français'
+        }
       });
     }
 
     // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Sélectionner un avatar aléatoire de manière cryptographiquement sûre
-    const randomIndex = crypto.randomInt(defaultAvatars.length);
-    const randomAvatar = defaultAvatars[randomIndex];
-
-    // Création de l'utilisateur avec la langue par défaut (fr)
+    // Créer l'utilisateur
     const user = await prisma.user.create({
       data: {
         email,
         username,
         password: hashedPassword,
-        avatar: randomAvatar
+        languageId: 'fr', // Définir la langue par défaut
+        avatar: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2Ij48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzllMjdiMCIvPjxjaXJjbGUgY3g9IjEyOCIgY3k9IjEwMCIgcj0iNjQiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNMjU2LDI1NkgwVjE5MmMwLTM1LjMsMjguNy02NCw2NC02NGgxMjhjMzUuMywwLDY0LDI4LjcsNjQsNjRWMjU2eiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==' // Avatar par défaut
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        avatar: true,
+        score: true,
+        languageId: true
       }
     });
 
     // Générer le token JWT
     const token = jwt.sign(
-      { userId: user.id },
+      { 
+        userId: user.id,
+        role: user.role
+      },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username
-        },
-        token
+      message: "Compte créé avec succès",
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        avatar: user.avatar,
+        score: user.score,
+        languageId: user.languageId
       }
     });
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Erreur lors de l\'inscription'
+      message: "Erreur lors de la création du compte"
     });
   }
 };
@@ -108,6 +132,15 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
     const user = await prisma.user.findUnique({
       where: {
         email: email
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        password: true,
+        role: true,
+        avatar: true,
+        isBlocked: true
       }
     });
 
@@ -120,6 +153,14 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
       return res.status(401).json({
         success: false,
         message: "Email ou mot de passe incorrect"
+      });
+    }
+
+    // Vérifier si l'utilisateur est bloqué
+    if (user.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: "Votre compte a été bloqué. Veuillez contacter un administrateur."
       });
     }
 

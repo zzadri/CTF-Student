@@ -2,7 +2,10 @@
 
 Une plateforme de CTF (Capture The Flag) moderne et sécurisée pour les étudiants, avec une interface utilisateur élégante et des fonctionnalités avancées.
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=zzadri_CTF-Student&metric=alert_status&token=c676f1dc672909832dc7abaaf1b897de850f8cd3)](https://sonarcloud.io/summary/new_code?id=zzadri_CTF-Student)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=zzadri_CTF-Student&metric=sqale_rating&token=c676f1dc672909832dc7abaaf1b897de850f8cd3)](https://sonarcloud.io/summary/new_code?id=zzadri_CTF-Student)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=zzadri_CTF-Student&metric=bugs&token=c676f1dc672909832dc7abaaf1b897de850f8cd3)](https://sonarcloud.io/summary/new_code?id=zzadri_CTF-Student)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=zzadri_CTF-Student&metric=code_smells&token=c676f1dc672909832dc7abaaf1b897de850f8cd3)](https://sonarcloud.io/summary/new_code?id=zzadri_CTF-Student)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=zzadri_CTF-Student&metric=duplicated_lines_density&token=c676f1dc672909832dc7abaaf1b897de850f8cd3)](https://sonarcloud.io/summary/new_code?id=zzadri_CTF-Student)
 
 ## Fonctionnalités
 

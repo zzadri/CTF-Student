@@ -65,7 +65,7 @@ export function LoginForm() {
       >
         {loading ? (
           <>
-            <i className="fas fa-spinner fa-spin mr-2"></i>
+            <i className="fas fa-spinner fa-spin" />{' '}
             Connexion en cours...
           </>
         ) : (

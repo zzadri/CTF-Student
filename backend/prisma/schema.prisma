@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  username  String     @unique
+  password  String
+  avatar    String     @default("")
+  role      Role       @default(USER)
+  score     Int        @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  solves    Solve[]
+  challenges Challenge[]
+  language  Language @relation(fields: [languageId], references: [id])
+  languageId String  @default("fr")
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  icon        String?    // Pour stocker le nom de l'icône FontAwesome
+  color       String?    // Pour stocker la couleur associée
+  challenges  Challenge[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Challenge {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  points      Int
+  flag        String
+  difficulty  Difficulty
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  solves      Solve[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Solve {
+  id          String    @id @default(uuid())
+  userId      String
+  challengeId String
+  solvedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+}
+
+model Language {
+  id       String @id
+  name     String
+  users    User[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  FACILE
+  MOYEN
+  DIFFICILE
+}

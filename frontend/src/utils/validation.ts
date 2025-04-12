@@ -1,3 +1,5 @@
+import { AUTH_CONFIG } from '../config/auth.config';
+
 export interface ValidationResult {
   isValid: boolean;
   message?: string;
@@ -83,4 +85,37 @@ export const validateRegisterForm = (
   }
 
   return { isValid: true };
+};
+
+export interface ValidationErrors {
+  [key: string]: string;
+}
+
+export const validateAuthForm = (
+  email: string,
+  password: string,
+  username?: string,
+  isRegister = false
+): ValidationErrors => {
+  const errors: ValidationErrors = {};
+
+  if (!email) {
+    errors.email = "L'email est requis";
+  } else if (!AUTH_CONFIG.EMAIL_PATTERN.test(email)) {
+    errors.email = "Email invalide";
+  }
+
+  if (isRegister && !username) {
+    errors.username = "Le nom d'utilisateur est requis";
+  }
+
+  if (!password) {
+    errors.password = "Le mot de passe est requis";
+  } else if (password.length < AUTH_CONFIG.PASSWORD_MIN_LENGTH) {
+    errors.password = `Le mot de passe doit contenir au moins ${AUTH_CONFIG.PASSWORD_MIN_LENGTH} caractères`;
+  } else if (!new RegExp(AUTH_CONFIG.PASSWORD_PATTERN).test(password)) {
+    errors.password = "Le format du mot de passe est invalide";
+  }
+
+  return errors;
 }; 

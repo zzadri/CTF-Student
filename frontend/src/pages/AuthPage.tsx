@@ -1,35 +1,19 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { validateAuthForm, ValidationErrors } from '../utils/validation';
 
 export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const navigate = useNavigate();
   const { login, register } = useAuth();
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!email) {
-      newErrors.email = "L'email est requis";
-    } else if (!/^\S+@\S+$/.test(email)) {
-      newErrors.email = "Email invalide";
-    }
-
-    if (isRegister && !username) {
-      newErrors.username = "Le nom d'utilisateur est requis";
-    }
-
-    if (!password) {
-      newErrors.password = "Le mot de passe est requis";
-    } else if (password.length < 6) {
-      newErrors.password = "Le mot de passe doit contenir au moins 6 caractères";
-    }
-
+    const newErrors = validateAuthForm(email, password, username, isRegister);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

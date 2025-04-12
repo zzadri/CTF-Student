@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, KeyboardEvent } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
@@ -79,6 +79,13 @@ export default function LeaderboardPage() {
     navigate(`/users/${userId}`);
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLElement>, userId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleUserClick(userId);
+    }
+  };
+
   const getTopThreeClass = (rank: number) => {
     switch (rank) {
       case 1:
@@ -97,7 +104,7 @@ export default function LeaderboardPage() {
       <div className="flex min-h-screen bg-gray-900">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-white">
-            <i className="fas fa-spinner fa-spin text-4xl"></i>
+            <i className="fas fa-spinner fa-spin text-4xl" />
           </div>
         </div>
       </div>
@@ -117,10 +124,12 @@ export default function LeaderboardPage() {
           {/* Podium */}
           <div className="flex justify-center items-end mb-12 space-x-4">
             {users.slice(0, 3).map((user, index) => (
-              <div
+              <button
                 key={user.id}
                 onClick={() => handleUserClick(user.id)}
-                className="flex flex-col items-center cursor-pointer transform hover:scale-105 transition-transform"
+                onKeyDown={(e) => handleKeyDown(e, user.id)}
+                className="flex flex-col items-center cursor-pointer transform hover:scale-105 transition-transform bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-cyan-500 rounded-lg"
+                aria-label={`Voir le profil de ${user.username}, classé ${index + 1}`}
               >
                 <img
                   src={user.avatar || '/default-avatar.png'}
@@ -135,7 +144,7 @@ export default function LeaderboardPage() {
                   <span className="text-white font-bold">{user.username}</span>
                   <div className="text-white text-sm">{user.score} pts</div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
@@ -154,8 +163,12 @@ export default function LeaderboardPage() {
                 {users.map((user, index) => (
                   <tr 
                     key={user.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleUserClick(user.id)}
-                    className="hover:bg-gray-700 cursor-pointer transition-colors"
+                    onKeyDown={(e) => handleKeyDown(e, user.id)}
+                    className="hover:bg-gray-700 cursor-pointer transition-colors focus:outline-none focus:bg-gray-700"
+                    aria-label={`Voir le profil de ${user.username}, classé ${index + 1}`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-white font-medium">#{index + 1}</span>

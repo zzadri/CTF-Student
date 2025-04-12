@@ -3,24 +3,33 @@ version: '3.8'
 services:
   frontend:
     build:
-      context: .
-      dockerfile: docker/app/Dockerfile
+      context: ./frontend
+      dockerfile: ../docker/app/Dockerfile
     ports:
       - "5173:5173"
     volumes:
-      - ./:/app
+      - ./frontend:/app
       - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3000/api
+      - VITE_WS_URL=ws://localhost:3000
     depends_on:
       - backend
 
   backend:
     build:
-      context: .
-      dockerfile: docker/api/Dockerfile
+      context: ./backend
+      dockerfile: ../docker/api/Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/ctf_db
+      - DATABASE_URL=postgresql://postgres:cy56la00@db:5432/CTF?schema=public
+      - JWT_SECRET=votre_secret_super_securise_a_changer_en_production
+      - PORT=3000
+      - CORS_ORIGIN=http://localhost:5173
     depends_on:
       - db
 
@@ -29,9 +38,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=ctf_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=cy56la00
+      - POSTGRES_DB=CTF
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

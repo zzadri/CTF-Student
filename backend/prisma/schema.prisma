@@ -14,29 +14,44 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
+  id        String     @id @default(uuid())
+  email     String     @unique
+  username  String     @unique
   password  String
-  role      Role     @default(USER)
-  score     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  avatar    String?    // L'avatar sera défini par défaut dans le contrôleur
+  role      Role       @default(USER)
+  score     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   solves    Solve[]
+  challenges Challenge[]
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  icon        String?    // Pour stocker le nom de l'icône FontAwesome
+  color       String?    // Pour stocker la couleur associée
+  challenges  Challenge[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Challenge {
-  id          String       @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String
   points      Int
-  category    Category
-  difficulty  Difficulty
   flag        String
-  dockerImage String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  difficulty  Difficulty
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
   solves      Solve[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Solve {
@@ -55,18 +70,8 @@ enum Role {
   ADMIN
 }
 
-enum Category {
-  WEB
-  CRYPTO
-  FORENSICS
-  RESEAU
-  STEGANO
-}
-
 enum Difficulty {
-  EZ
   FACILE
   MOYEN
   DIFFICILE
-  HARD
 }

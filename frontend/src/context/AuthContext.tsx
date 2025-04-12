@@ -64,13 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Tentative de connexion avec:', { email, password });
       const response = await axios.post(`${API_URL}/auth/login`, {
         email,
         password
       });
-
-      console.log('Réponse du serveur:', response.data);
 
       if (response.data.success && response.data.token) {
         localStorage.setItem('token', response.data.token);

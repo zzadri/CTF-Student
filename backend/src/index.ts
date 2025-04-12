@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/category';
 import userRoutes from './routes/userRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import { specs } from './config/swagger';
 import path from 'path';
 
 const prisma = new PrismaClient();
@@ -26,6 +28,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Documentation Swagger
+app.use('/api-backend-docs', swaggerUi.serve, swaggerUi.setup(specs));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -37,7 +42,7 @@ app.use('/avatars', express.static(path.join(__dirname, '../public/avatars')));
 // Error handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 async function main() {
   try {

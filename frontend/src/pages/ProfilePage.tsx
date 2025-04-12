@@ -96,23 +96,24 @@ export function ProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2 text-white">Avatar</label>
               <div className="flex items-center space-x-6">
-                <div className="relative">
+                <div className="relative group">
                   {previewUrl ? (
                     <img
                       src={previewUrl}
                       alt="Avatar preview"
-                      className="w-24 h-24 rounded-full object-cover"
+                      className="w-24 h-24 rounded-full object-cover group-hover:opacity-75 transition-opacity"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center group-hover:bg-gray-700 transition-colors">
                       <i className="fas fa-user text-4xl text-gray-300"></i>
                     </div>
                   )}
                   <label
                     htmlFor="avatar-upload"
-                    className="absolute bottom-0 right-0 bg-cyan-600 rounded-full p-2 cursor-pointer hover:bg-cyan-700"
+                    className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
-                    <i className="fas fa-camera text-white"></i>
+                    <i className="fas fa-cloud-upload-alt text-2xl text-white mb-1"></i>
+                    <span className="text-xs text-white">Changer</span>
                   </label>
                   <input
                     id="avatar-upload"
@@ -123,8 +124,14 @@ export function ProfilePage() {
                   />
                 </div>
                 <div className="text-sm text-gray-400">
-                  <p>Cliquez sur l'icône de caméra pour changer votre avatar</p>
-                  <p>Format accepté : JPG, PNG (max 2MB)</p>
+                  <p className="flex items-center">
+                    <i className="fas fa-info-circle mr-2"></i>
+                    Survolez l'avatar pour le modifier
+                  </p>
+                  <p className="flex items-center mt-1">
+                    <i className="fas fa-check-circle mr-2"></i>
+                    Format accepté : JPG, PNG (max 2MB)
+                  </p>
                 </div>
               </div>
             </div>

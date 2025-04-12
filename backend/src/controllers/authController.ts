@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import { defaultAvatars } from '../utils/avatars';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 interface RegisterBody {
   email: string;

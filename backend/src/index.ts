@@ -12,6 +12,9 @@ import path from 'path';
 const prisma = new PrismaClient();
 const app = express();
 
+// Désactiver l'en-tête X-Powered-By pour des raisons de sécurité
+app.disable('x-powered-by');
+
 // Configuration CORS
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],

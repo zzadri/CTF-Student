@@ -3,20 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { defaultAvatars } from '../utils/avatars';
+import { LoginBody, RegisterBody } from '../interfaces/auth.interface';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET;
-
-interface RegisterBody {
-  email: string;
-  username: string;
-  password: string;
-}
-
-interface LoginBody {
-  email: string;
-  password: string;
-}
 
 const setAuthCookie = (res: Response, token: string) => {
   res.cookie('auth_token', token, {
@@ -29,9 +19,9 @@ const setAuthCookie = (res: Response, token: string) => {
 
 export const register = async (req: Request<{}, {}, RegisterBody>, res: Response) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, password, username } = req.body;
 
-    // Vérification si l'utilisateur existe déjà
+    // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
@@ -44,55 +34,47 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: existingUser.email === email 
-          ? 'Cet email est déjà utilisé' 
-          : 'Ce nom d\'utilisateur est déjà utilisé'
+        message: "Un utilisateur avec cet email ou ce nom d'utilisateur existe déjà"
       });
     }
 
-    // Hashage du mot de passe
-    const hashedPassword = await bcrypt.hash(password, 11);
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Sélection d'un avatar aléatoire
+    // Sélectionner un avatar aléatoire
     const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
 
-    // Création de l'utilisateur avec l'avatar
+    // Création de l'utilisateur avec la langue par défaut (fr)
     const user = await prisma.user.create({
       data: {
         email,
         username,
         password: hashedPassword,
-        role: 'USER',
         avatar: randomAvatar
       }
     });
 
-    // Génération du token JWT
+    // Générer le token JWT
     const token = jwt.sign(
-      { 
-        userId: user.id,
-        role: user.role 
-      },
+      { userId: user.id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    // Stockage du token dans un cookie
-    setAuthCookie(res, token);
-
-    // Réponse sans le mot de passe
-    const { password: _, ...userWithoutPassword } = user;
-    
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       data: {
-        user: userWithoutPassword
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username
+        },
+        token
       }
     });
-
   } catch (error) {
     console.error('Erreur lors de l\'inscription:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'inscription'
     });
@@ -199,7 +181,8 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         username: true,
         role: true,
         avatar: true,
-        score: true
+        score: true,
+        languageId: true
       }
     });
 

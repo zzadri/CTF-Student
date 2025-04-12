@@ -3,16 +3,25 @@ import { useAuth } from '../context/AuthContext';
 import { notifications } from '@mantine/notifications';
 import axios from 'axios';
 import { Navbar } from '../components/Navbar';
+import { toast } from 'react-hot-toast';
 
-export function ProfilePage() {
-  const { user } = useAuth();
+interface Language {
+  id: string;
+  name: string;
+}
+
+export default function ProfilePage() {
+  const { user, updateUser } = useAuth();
   const [username, setUsername] = useState(user?.username || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarBase64, setAvatarBase64] = useState<string | undefined>(undefined);
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.avatar || null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState(user?.languageId || 'fr');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -28,50 +37,64 @@ export function ProfilePage() {
       }
     };
 
+    const fetchLanguages = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/languages`);
+        if (response.data.success) {
+          setLanguages(response.data.data);
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des langues:', error);
+      }
+    };
+
     fetchCategories();
+    fetchLanguages();
   }, []);
 
-  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const base64 = await convertToBase64(file);
+        setAvatarBase64(base64);
+      } catch (error) {
+        console.error("Erreur lors de la conversion en base64:", error);
+        toast.error("Erreur lors du traitement de l'image");
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const formData = new FormData();
-      formData.append('username', username);
-      if (avatarFile) {
-        formData.append('avatar', avatarFile);
-      }
-
-      const response = await axios.put(`${import.meta.env.VITE_API_URL}/users/profile`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      await updateUser({
+        username,
+        languageId: selectedLanguage,
+        avatar: avatarBase64
       });
-
-      if (response.data.success) {
-        notifications.show({
-          title: 'Succès',
-          message: 'Profil mis à jour avec succès',
-          color: 'green',
-        });
-      }
+      notifications.show({
+        title: 'Succès',
+        message: 'Profil mis à jour avec succès',
+        color: 'green'
+      });
     } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil:", error);
       notifications.show({
         title: 'Erreur',
-        message: 'Erreur lors de la mise à jour du profil',
-        color: 'red',
+        message: "Erreur lors de la mise à jour du profil",
+        color: 'red'
       });
     } finally {
       setLoading(false);
@@ -119,7 +142,7 @@ export function ProfilePage() {
                     id="avatar-upload"
                     type="file"
                     accept="image/*"
-                    onChange={handleAvatarChange}
+                    onChange={handleFileChange}
                     className="hidden"
                   />
                 </div>
@@ -149,6 +172,29 @@ export function ProfilePage() {
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white"
                 required
               />
+            </div>
+
+            {/* Language selector */}
+            <div>
+              <label htmlFor="language" className="block text-sm font-medium mb-2 text-white">
+                Langue préférée
+              </label>
+              <select
+                id="language"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 text-white"
+              >
+                {languages.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-sm text-gray-400">
+                <i className="fas fa-info-circle mr-2"></i>
+                Cette langue sera utilisée pour l'interface du site
+              </p>
             </div>
 
             {/* Submit button */}

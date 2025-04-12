@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -35,11 +36,12 @@ interface LeaderboardResponse {
   data: LeaderboardUser[];
 }
 
-export function LeaderboardPage() {
+export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +75,10 @@ export function LeaderboardPage() {
     fetchData();
   }, []);
 
+  const handleUserClick = (userId: string) => {
+    navigate(`/users/${userId}`);
+  };
+
   const getTopThreeClass = (rank: number) => {
     switch (rank) {
       case 1:
@@ -86,109 +92,94 @@ export function LeaderboardPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gray-900">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-white">
+            <i className="fas fa-spinner fa-spin text-4xl"></i>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex min-h-screen bg-gray-900">
       <Navbar 
         categories={categories}
         loading={loading}
         selectedCategory={selectedCategory}
         onCategorySelect={(id) => setSelectedCategory(id)}
       />
-
-      <div className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-bold text-white mb-8">Classement</h1>
-
-          {/* Top 3 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {users.slice(0, 3).map((user) => (
+      <div className="flex-1 p-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Podium */}
+          <div className="flex justify-center items-end mb-12 space-x-4">
+            {users.slice(0, 3).map((user, index) => (
               <div
                 key={user.id}
-                className={`${getTopThreeClass(user.rank || 0)} rounded-lg p-6 text-center transform hover:scale-105 transition-transform`}
+                onClick={() => handleUserClick(user.id)}
+                className="flex flex-col items-center cursor-pointer transform hover:scale-105 transition-transform"
               >
-                <div className="relative inline-block">
-                  <div className="w-20 h-20 rounded-full bg-gray-700 mx-auto mb-4 overflow-hidden">
-                    <img 
-                      src={user.avatar} 
-                      alt={`Avatar de ${user.username}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "https://api.dicebear.com/7.x/avataaars/svg";
-                      }}
-                    />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center">
-                    <span className="text-lg font-bold text-white">#{user.rank}</span>
-                  </div>
+                <img
+                  src={user.avatar || '/default-avatar.png'}
+                  alt={`Avatar de ${user.username}`}
+                  className="w-16 h-16 rounded-full mb-2 border-2 border-yellow-500"
+                />
+                <div className={`w-24 py-4 px-2 rounded-t-lg text-center ${
+                  index === 0 ? 'bg-yellow-500 h-32' :
+                  index === 1 ? 'bg-gray-400 h-24' :
+                  'bg-yellow-700 h-20'
+                }`}>
+                  <span className="text-white font-bold">{user.username}</span>
+                  <div className="text-white text-sm">{user.score} pts</div>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{user.username}</h3>
-                <p className="text-cyan-400 font-medium">{user.score} points</p>
-                <p className="text-sm text-gray-300">{user.challengesCompleted} challenges complétés</p>
-                {user.recentAchievements.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-400 mb-2">Derniers succès :</p>
-                    <ul className="text-xs text-gray-300 space-y-1">
-                      {user.recentAchievements.map((achievement, index) => (
-                        <li key={index} className="flex items-center justify-between">
-                          <span>{achievement.challengeName}</span>
-                          <span className="text-cyan-400">+{achievement.points}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             ))}
           </div>
 
-          {/* Liste des autres joueurs */}
-          <div className="bg-gray-800/30 rounded-lg overflow-hidden">
-            <div className="grid grid-cols-12 gap-4 p-4 text-gray-400 font-medium border-b border-gray-700">
-              <div className="col-span-1 text-center">Rang</div>
-              <div className="col-span-5">Joueur</div>
-              <div className="col-span-3 text-center">Points</div>
-              <div className="col-span-3 text-center">Challenges</div>
-            </div>
-            {loading ? (
-              <div className="text-center py-8">
-                <i className="fas fa-spinner fa-spin text-4xl text-cyan-400"></i>
-                <p className="mt-4 text-gray-400">Chargement du classement...</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-700">
-                {users.slice(3).map((user) => (
-                  <div 
+          {/* Tableau de classement */}
+          <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rang</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Joueur</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Score</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Challenges</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {users.map((user, index) => (
+                  <tr 
                     key={user.id}
-                    className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-800/50 transition-colors"
+                    onClick={() => handleUserClick(user.id)}
+                    className="hover:bg-gray-700 cursor-pointer transition-colors"
                   >
-                    <div className="col-span-1 text-center font-medium text-gray-500">
-                      #{user.rank}
-                    </div>
-                    <div className="col-span-5 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
-                        <img 
-                          src={user.avatar} 
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-white font-medium">#{index + 1}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <img
+                          src={user.avatar || '/default-avatar.png'}
                           alt={`Avatar de ${user.username}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "https://api.dicebear.com/7.x/avataaars/svg";
-                          }}
+                          className="w-10 h-10 rounded-full"
                         />
+                        <span className="ml-4 text-white">{user.username}</span>
                       </div>
-                      <span className="text-white">{user.username}</span>
-                    </div>
-                    <div className="col-span-3 text-center text-cyan-400">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-white">
                       {user.score} points
-                    </div>
-                    <div className="col-span-3 text-center text-gray-300">
-                      {user.challengesCompleted} challenges
-                    </div>
-                  </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-white">
+                      {user.challengesCompleted} validés
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

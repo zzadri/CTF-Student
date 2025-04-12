@@ -8,7 +8,7 @@ async function main() {
     { id: 'en', name: 'English' },
     { id: 'es', name: 'Español' },
     { id: 'ru', name: 'Русский' },
-    { id: 'kl', name: 'Klingon' },
+    { id: 'kl', name: 'Klingon' }, // Un peu d'humour avec une langue fictive
   ];
 
   console.log('Seeding languages...');

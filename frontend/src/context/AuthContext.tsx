@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { notifications } from '@mantine/notifications';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -12,8 +13,10 @@ interface User {
   id: string;
   email: string;
   username: string;
+  avatar: string;
   role: string;
-  avatar?: string;
+  score: number;
+  languageId: string;
 }
 
 interface AuthContextType {
@@ -22,6 +25,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,21 +94,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await axios.post(`${API_URL}/auth/register`, {
         username,
         email,
-        password
+        password,
       });
 
-      if (response.data.success && response.data.token) {
+      if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         setUser(response.data.user);
-      } else {
-        throw new Error('Réponse invalide du serveur');
+        notifications.show({
+          title: 'Succès',
+          message: 'Inscription réussie !',
+          color: 'green',
+        });
+        return response.data;
       }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || "Erreur lors de l'inscription");
-      }
-      throw error;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Une erreur est survenue lors de l\'inscription';
+      notifications.show({
+        title: 'Erreur',
+        message: message,
+        color: 'red',
+      });
+      throw new Error(message);
     }
   };
 
@@ -114,8 +124,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = async (userData: Partial<User>) => {
+    try {
+      const response = await axios.put(`${API_URL}/users/profile`, userData);
+      if (response.data.success) {
+        setUser(prevUser => prevUser ? { ...prevUser, ...response.data.user } : null);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

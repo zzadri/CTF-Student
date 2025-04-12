@@ -18,13 +18,15 @@ model User {
   email     String     @unique
   username  String     @unique
   password  String
-  avatar    String?    // L'avatar sera défini par défaut dans le contrôleur
+  avatar    String     @default("")
   role      Role       @default(USER)
-  score     Int       @default(0)
+  score     Int        @default(0)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   solves    Solve[]
   challenges Challenge[]
+  language  Language @relation(fields: [languageId], references: [id])
+  languageId String  @default("fr")
 }
 
 model Category {
@@ -63,6 +65,12 @@ model Solve {
   challenge   Challenge @relation(fields: [challengeId], references: [id])
 
   @@unique([userId, challengeId])
+}
+
+model Language {
+  id       String @id
+  name     String
+  users    User[]
 }
 
 enum Role {

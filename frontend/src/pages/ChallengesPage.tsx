@@ -15,7 +15,7 @@ interface Category {
   };
 }
 
-export function ChallengesPage() {
+export default function ChallengesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

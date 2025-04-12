@@ -1,38 +1,41 @@
 import { Request, Response, NextFunction } from 'express';
+import { validateEmail, validatePassword, validateUsername } from '../utils/validation';
 
-export const validateRegister = (req: Request, res: Response, next: NextFunction) => {
-  const { email, username, password } = req.body;
+export const validateRegistration = (req: Request, res: Response, next: NextFunction) => {
+  const { email, password, username } = req.body;
 
-  // Validation de l'email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
+  // Vérification des champs requis
+  if (!email || !password || !username) {
     return res.status(400).json({
       success: false,
-      message: 'Email invalide'
+      message: 'Tous les champs sont requis'
     });
   }
 
-  // Validation du nom d'utilisateur
-  if (!username || username.length < 3 || username.length > 30) {
+  // Validation de l'email
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.isValid) {
     return res.status(400).json({
       success: false,
-      message: 'Le nom d\'utilisateur doit contenir entre 3 et 30 caractères'
+      message: emailValidation.message
     });
   }
 
   // Validation du mot de passe
-  if (!password || password.length < 8) {
+  const passwordValidation = validatePassword(password);
+  if (!passwordValidation.isValid) {
     return res.status(400).json({
       success: false,
-      message: 'Le mot de passe doit contenir au moins 8 caractères'
+      message: passwordValidation.message
     });
   }
 
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-  if (!passwordRegex.test(password)) {
+  // Validation du nom d'utilisateur
+  const usernameValidation = validateUsername(username);
+  if (!usernameValidation.isValid) {
     return res.status(400).json({
       success: false,
-      message: 'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial'
+      message: usernameValidation.message
     });
   }
 
@@ -42,20 +45,28 @@ export const validateRegister = (req: Request, res: Response, next: NextFunction
 export const validateLogin = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
 
-  // Validation de l'email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) {
+  // Vérification des champs requis
+  if (!email || !password) {
     return res.status(400).json({
       success: false,
-      message: 'Email invalide'
+      message: 'Email et mot de passe requis'
     });
   }
 
-  // Validation basique du mot de passe
-  if (!password || password.length < 1) {
+  // Validation de l'email
+  const emailValidation = validateEmail(email);
+  if (!emailValidation.isValid) {
     return res.status(400).json({
       success: false,
-      message: 'Veuillez entrer un mot de passe'
+      message: emailValidation.message
+    });
+  }
+
+  // Validation basique du mot de passe (longueur uniquement pour le login)
+  if (password.length < 8 || password.length > 72) {
+    return res.status(400).json({
+      success: false,
+      message: 'Format de mot de passe invalide'
     });
   }
 

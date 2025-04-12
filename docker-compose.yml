@@ -26,8 +26,8 @@ services:
       - ./backend:/app
       - /app/node_modules
     environment:
-      - DATABASE_URL=postgresql://postgres:cy56la00@db:5432/CTF?schema=public
-      - JWT_SECRET=votre_secret_super_securise_a_changer_en_production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
       - PORT=3000
       - CORS_ORIGIN=http://localhost:5173
     depends_on:
@@ -38,9 +38,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=cy56la00
-      - POSTGRES_DB=CTF
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

@@ -23,6 +23,7 @@
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "ctf_student": "file:",
+    "date-fns": "^4.1.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^6.6.0",
     "react": "^19.0.0",

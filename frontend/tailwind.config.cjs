@@ -17,6 +17,19 @@ module.exports = {
           800: '#1E40AF',
         },
       },
+      dropShadow: {
+        'glow-green': '0 0 3px rgba(74, 222, 128, 0.5)',
+        'glow-red': '0 0 3px rgba(248, 113, 113, 0.5)',
+      },
+      animation: {
+        'notification-in': 'notification-in 0.3s ease-out',
+      },
+      keyframes: {
+        'notification-in': {
+          '0%': { transform: 'translateY(-10px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
+      },
     },
   },
   plugins: [

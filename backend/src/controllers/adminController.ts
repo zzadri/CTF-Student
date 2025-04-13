@@ -265,9 +265,28 @@ export const deleteUser = async (req: Request, res: Response) => {
       });
     }
 
-    // Supprimer l'utilisateur et toutes ses données associées
-    await prisma.user.delete({
-      where: { id }
+    // Supprimer toutes les données associées dans une transaction
+    await prisma.$transaction(async (tx) => {
+      // Supprimer les notifications
+      await tx.notification.deleteMany({
+        where: { userId: id }
+      });
+
+      // Supprimer les résolutions de défis
+      await tx.solve.deleteMany({
+        where: { userId: id }
+      });
+
+      // Mettre à null l'userId des défis créés par l'utilisateur
+      await tx.challenge.updateMany({
+        where: { userId: id },
+        data: { userId: null }
+      });
+
+      // Finalement, supprimer l'utilisateur
+      await tx.user.delete({
+        where: { id }
+      });
     });
 
     return res.json({

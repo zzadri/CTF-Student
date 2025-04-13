@@ -10,9 +10,17 @@ import { errorHandler } from './middleware/errorHandler';
 import { specs } from './config/swagger';
 import path from 'path';
 import { tokenBlacklist } from './utils/tokenBlacklist';
+import { config } from 'dotenv';
+import { createServer } from 'http';
+import { initializeSocket } from './services/socketService';
+// import challengeRoutes from './routes/challengeRoutes';  // Temporairement commenté
+import notificationRoutes from './routes/notificationRoutes';
 
 const prisma = new PrismaClient();
 const app = express();
+const httpServer = createServer(app);
+
+config();
 
 // Initialiser la blacklist au démarrage
 tokenBlacklist.initialize().catch(error => {
@@ -24,13 +32,17 @@ app.disable('x-powered-by');
 
 // Configuration CORS
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: process.env.CORS_ORIGIN,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Authorization', 'Content-Type', 'Origin', 'Accept']
 }));
 
-app.use(express.json());
+// Middleware pour les options CORS préflight
+app.options('*', cors());
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware de logging
 app.use((req, res, next) => {
@@ -46,6 +58,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+// app.use('/api/challenges', challengeRoutes);  // Temporairement commenté
+app.use('/api/notifications', notificationRoutes);
 
 // Servir les fichiers statiques
 app.use('/avatars', express.static(path.join(__dirname, '../public/avatars')));
@@ -53,20 +67,33 @@ app.use('/avatars', express.static(path.join(__dirname, '../public/avatars')));
 // Error handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT;
+// Initialiser Socket.IO
+console.log('Tentative d\'initialisation de Socket.IO...');
+const socketService = initializeSocket(httpServer);
+console.log('Socket.IO initialisé avec succès');
+
+const PORT = process.env.PORT || 3000;
 
 async function main() {
   try {
+    console.log('Tentative de connexion à la base de données...');
     await prisma.$connect();
-    console.log('Connected to database');
+    console.log('Connecté à la base de données avec succès');
     
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    httpServer.listen(PORT, () => {
+      console.log('=================================');
+      console.log(`Serveur démarré sur le port ${PORT}`);
+      console.log(`CORS autorisé pour: ${process.env.CORS_ORIGIN}`);
+      console.log(`Socket.IO en écoute sur le port ${PORT}`);
+      console.log('=================================');
     });
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('Erreur lors du démarrage du serveur:', error);
     process.exit(1);
   }
 }
 
-main(); 
+main().catch((error) => {
+  console.error('Erreur fatale lors du démarrage:', error);
+  process.exit(1);
+}); 

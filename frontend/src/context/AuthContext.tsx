@@ -25,7 +25,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<User>;
   checkAdminRights: () => Promise<boolean>;
 }
 
@@ -169,12 +169,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const updateUser = async (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>): Promise<User> => {
     try {
       const response = await axios.put(`${API_URL}/users/profile`, userData);
       if (response.data.success) {
-        setUser(prevUser => prevUser ? { ...prevUser, ...response.data.user } : null);
+        const updatedUser = response.data.user;
+        setUser(prevUser => prevUser ? { ...prevUser, ...updatedUser } : null);
+        return updatedUser;
       }
+      throw new Error('Mise à jour du profil échouée');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       throw error;

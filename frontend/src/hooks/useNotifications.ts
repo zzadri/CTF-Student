@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { notifications } from '@mantine/notifications';
 import axios from 'axios';
 
@@ -13,47 +12,14 @@ interface Notification {
 }
 
 export const useNotifications = () => {
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
-  const { user } = useAuth();
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
-    if (user) {
-      // Connexion au serveur Socket.IO avec la bonne URL
-      const socketUrl = import.meta.env.VITE_WS_URL;
-      console.log('Tentative de connexion socket à:', socketUrl);
-      const newSocket = io(socketUrl, {
-        withCredentials: true,
-        transports: ['polling', 'websocket'],
-        auth: {
-          token: localStorage.getItem('token')
-        },
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
-      });
-
-      newSocket.on('connect', () => {
-        console.log('Connecté au serveur de notifications avec l\'ID:', newSocket.id);
-        // Authentifier le socket avec l'ID de l'utilisateur
-        newSocket.emit('authenticate', user.id);
-      });
-
-      newSocket.on('connect_error', (error) => {
-        console.error('Erreur de connexion socket:', error.message);
-        console.log('État du transport:', newSocket.io.engine?.transport?.name);
-        notifications.show({
-          title: 'Erreur de connexion',
-          message: `Impossible de se connecter au serveur de notifications: ${error.message}`,
-          color: 'red'
-        });
-      });
-
-      newSocket.on('notification', (notification: Notification) => {
-        // Ajouter la nouvelle notification à la liste
+    if (socket) {
+      socket.on('notification', (notification: Notification) => {
         setUnreadNotifications(prev => [notification, ...prev]);
         
-        // Afficher une notification toast
         notifications.show({
           title: notification.type === 'ADMIN' ? 'Message administrateur' : 'Nouvelle notification',
           message: notification.message,
@@ -62,22 +28,17 @@ export const useNotifications = () => {
         });
       });
 
-      setSocket(newSocket);
-
       // Charger les notifications non lues au démarrage
       fetchUnreadNotifications();
 
       return () => {
-        if (newSocket.connected) {
-          newSocket.disconnect();
-        }
+        socket.off('notification');
       };
     }
-  }, [user]);
+  }, [socket]);
 
   const fetchUnreadNotifications = async () => {
     try {
-      // Correction de l'URL en retirant le /api/ en double
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/notifications`);
       if (response.data.success) {
         setUnreadNotifications(response.data.notifications);
@@ -97,7 +58,6 @@ export const useNotifications = () => {
           prev.filter(notification => notification.id !== notificationId)
         );
         
-        // Informer le serveur via socket que la notification a été lue
         if (socket?.connected) {
           socket.emit('notification_read', notificationId);
         }
@@ -115,6 +75,6 @@ export const useNotifications = () => {
   return {
     unreadNotifications,
     markAsRead,
-    connected: socket?.connected || false
+    connected
   };
 }; 

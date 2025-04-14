@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import AuthPage from './pages/AuthPage';
@@ -10,6 +11,8 @@ import PublicProfile from './pages/PublicProfile';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminPage from './pages/AdminPage';
+import CategoryChallengesPage from './pages/CategoryChallengesPage';
+import ChallengePage from './pages/ChallengePage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -106,6 +109,30 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/challenges"
+        element={
+          <ProtectedRoute>
+            <ChallengesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories/:categoryId"
+        element={
+          <ProtectedRoute>
+            <CategoryChallengesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/challenges/:id"
+        element={
+          <ProtectedRoute>
+            <ChallengePage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/users/:userId" element={<PublicProfile />} />
       <Route
         path="/admin"
@@ -124,8 +151,10 @@ export function App() {
     <MantineProvider>
       <Router>
         <AuthProvider>
-          <Notifications />
-          <AppRoutes />
+          <SocketProvider>
+            <Notifications />
+            <AppRoutes />
+          </SocketProvider>
         </AuthProvider>
       </Router>
     </MantineProvider>

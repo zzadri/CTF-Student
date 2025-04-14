@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/category';
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
+import challengeRoutes from './routes/challenge';
 import { errorHandler } from './middleware/errorHandler';
 import { specs } from './config/swagger';
 import path from 'path';
@@ -13,7 +14,6 @@ import { tokenBlacklist } from './utils/tokenBlacklist';
 import { config } from 'dotenv';
 import { createServer } from 'http';
 import { initializeSocket } from './services/socketService';
-// import challengeRoutes from './routes/challengeRoutes';  // Temporairement commenté
 import notificationRoutes from './routes/notificationRoutes';
 
 const prisma = new PrismaClient();
@@ -58,7 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
-// app.use('/api/challenges', challengeRoutes);  // Temporairement commenté
+app.use('/api/challenges', challengeRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Servir les fichiers statiques

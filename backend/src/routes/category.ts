@@ -1,60 +1,39 @@
 import { Router } from 'express';
-import { getAllCategories } from '../controllers/categoryController';
-import { authenticateToken } from '../middleware/authMiddleware';
+import { getAllCategories, getCategoryById } from '../controllers/categoryController';
 
 const router = Router();
 
 /**
  * @swagger
- * tags:
- *   name: Categories
- *   description: Gestion des catégories de challenges
+ * /categories:
+ *   get:
+ *     summary: Récupérer toutes les catégories
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: Liste des catégories récupérée avec succès
  */
+router.get('/', getAllCategories);
 
 /**
  * @swagger
- * /categories:
+ * /categories/{id}:
  *   get:
- *     summary: Récupérer toutes les catégories de challenges
+ *     summary: Récupérer une catégorie par son ID
  *     tags: [Categories]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID de la catégorie
  *     responses:
  *       200:
- *         description: Liste des catégories
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                     description: Nom de la catégorie
- *                   description:
- *                     type: string
- *                     description: Description de la catégorie
- *                   challenges:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         title:
- *                           type: string
- *                         description:
- *                           type: string
- *                         points:
- *                           type: number
- *       401:
- *         description: Non authentifié
- *       500:
- *         description: Erreur serveur
+ *         description: Catégorie récupérée avec succès
+ *       404:
+ *         description: Catégorie non trouvée
  */
-router.get('/', authenticateToken, getAllCategories);
+router.get('/:id', getCategoryById);
 
 export default router; 

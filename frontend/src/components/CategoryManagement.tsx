@@ -2,40 +2,20 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, TextInput, ColorInput, LoadingOverlay, ActionIcon, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faTrash, faFolder, faCode, faLock, faBug, faGears } from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
 import axios from 'axios';
+
+// Ajouter les icônes à la bibliothèque FontAwesome
+library.add(faFolder, faCode, faLock, faBug, faGears);
 
 interface Category {
   id: string;
   name: string;
-  color: string;
-  icon: string;
+  color: string | null;
+  icon: string | null;
   challengeCount: number;
 }
-
-interface CachedData {
-  data: any;
-  timestamp: number;
-}
-
-const cache: { [key: string]: CachedData } = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const fetchWithCache = async (url: string) => {
-  const cachedData = cache[url];
-  const now = Date.now();
-
-  if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    return cachedData.data;
-  }
-
-  const response = await axios.get(url);
-  cache[url] = {
-    data: response.data,
-    timestamp: now
-  };
-  return response.data;
-};
 
 function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,15 +29,26 @@ function CategoryManagement() {
   });
 
   useEffect(() => {
-    const handleOpenModal = () => setModalOpen(true);
+    const handleOpenModal = () => {
+      setEditingCategory(null);
+      setFormData({ name: '', color: '#1971c2', icon: 'fa-folder' });
+      setModalOpen(true);
+    };
     window.addEventListener('openCategoryModal', handleOpenModal);
     return () => window.removeEventListener('openCategoryModal', handleOpenModal);
   }, []);
 
   const fetchCategories = async () => {
     try {
-      const data = await fetchWithCache(`${import.meta.env.VITE_API_URL}/admin/categories`);
-      setCategories(data.categories);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
+      if (response.data.success && response.data.data) {
+        setCategories(response.data.data.map((category: any) => ({
+          ...category,
+          challengeCount: category._count.challenges
+        })));
+      } else {
+        throw new Error('Format de réponse invalide');
+      }
     } catch (error) {
       notifications.show({
         title: 'Erreur',
@@ -75,55 +66,85 @@ function CategoryManagement() {
 
   const handleSubmit = async () => {
     try {
-      if (editingCategory) {
-        await axios.put(`${import.meta.env.VITE_API_URL}/admin/categories/${editingCategory.id}`, formData);
+      if (!formData.name || !formData.color || !formData.icon) {
         notifications.show({
-          title: 'Succès',
-          message: 'Catégorie modifiée avec succès',
-          color: 'green'
+          title: 'Erreur',
+          message: 'Tous les champs sont requis',
+          color: 'red'
         });
-      } else {
-        await axios.post(`${import.meta.env.VITE_API_URL}/admin/categories`, formData);
-        notifications.show({
-          title: 'Succès',
-          message: 'Catégorie créée avec succès',
-          color: 'green'
-        });
+        return;
       }
+
+      if (editingCategory) {
+        // Route PUT pour modifier une catégorie
+        const response = await axios.put(
+          `${import.meta.env.VITE_API_URL}/admin/categories/${editingCategory.id}`,
+          {
+            name: formData.name,
+            color: formData.color,
+            icon: formData.icon
+          }
+        );
+
+        if (response.data.success) {
+          notifications.show({
+            title: 'Succès',
+            message: 'Catégorie modifiée avec succès',
+            color: 'green'
+          });
+        }
+      } else {
+        // Route POST pour créer une catégorie
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_URL}/admin/categories`,
+          {
+            name: formData.name,
+            color: formData.color,
+            icon: formData.icon
+          }
+        );
+
+        if (response.data.success) {
+          notifications.show({
+            title: 'Succès',
+            message: 'Catégorie créée avec succès',
+            color: 'green'
+          });
+        }
+      }
+
       setModalOpen(false);
       setEditingCategory(null);
       setFormData({ name: '', color: '#1971c2', icon: 'fa-folder' });
-      // Invalider le cache après une modification
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/categories`];
       fetchCategories();
-    } catch (error) {
+    } catch (error: any) {
       notifications.show({
         title: 'Erreur',
-        message: 'Une erreur est survenue',
+        message: error.response?.data?.message || 'Une erreur est survenue',
         color: 'red'
       });
     }
   };
 
   const handleDelete = async (categoryId: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
-      return;
-    }
-
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/admin/categories/${categoryId}`);
-      notifications.show({
-        title: 'Succès',
-        message: 'Catégorie supprimée avec succès',
-        color: 'green'
-      });
-      // Invalider le cache après une suppression
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/categories`];
-      fetchCategories();
-    } catch (error) {
+      // Route DELETE pour supprimer une catégorie
+      const response = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/admin/categories/${categoryId}`
+      );
+
+      if (response.data.success) {
+        notifications.show({
+          title: 'Succès',
+          message: 'Catégorie supprimée avec succès',
+          color: 'green'
+        });
+        fetchCategories();
+      }
+    } catch (error: any) {
       notifications.show({
         title: 'Erreur',
-        message: 'Impossible de supprimer la catégorie',
+        message: error.response?.data?.message || 'Impossible de supprimer la catégorie',
         color: 'red'
       });
     }
@@ -133,8 +154,8 @@ function CategoryManagement() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      color: category.color,
-      icon: category.icon
+      color: category.color || '#1971c2',
+      icon: category.icon || 'fa-folder'
     });
     setModalOpen(true);
   };
@@ -144,15 +165,15 @@ function CategoryManagement() {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       <Table striped highlightOnHover>
         <thead>
           <tr>
-            <th className="text-white">Nom</th>
-            <th className="text-white">Couleur</th>
-            <th className="text-white">Icône</th>
-            <th className="text-white">Challenges</th>
-            <th className="text-white">Actions</th>
+            <th className="text-white" style={{ width: '30%' }}>Nom</th>
+            <th className="text-white" style={{ width: '25%' }}>Couleur</th>
+            <th className="text-white text-center" style={{ width: '15%' }}>Icône</th>
+            <th className="text-white text-center" style={{ width: '15%' }}>Challenges</th>
+            <th className="text-white text-center" style={{ width: '15%' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -163,35 +184,30 @@ function CategoryManagement() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded"
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: category.color || '#1971c2' }}
                   />
-                  <span className="text-white">{category.color}</span>
+                  <span className="text-white">{category.color || '#1971c2'}</span>
                 </div>
               </td>
-              <td>
-                <i className={`fas ${category.icon} text-white`} />
+              <td className="text-center">
+                <FontAwesomeIcon 
+                  icon={category.icon ? category.icon.replace('fa-', '') as any : 'folder'} 
+                  className="text-white text-xl"
+                />
               </td>
-              <td className="text-white">{category.challengeCount}</td>
+              <td className="text-white text-center">{category.challengeCount}</td>
               <td>
-                <div className="flex gap-2">
+                <div className="flex justify-center gap-2">
                   <ActionIcon
-                    variant="light"
+                    variant="filled"
                     color="blue"
-                    onClick={() => {
-                      setEditingCategory(category);
-                      setFormData({
-                        name: category.name,
-                        color: category.color,
-                        icon: category.icon
-                      });
-                      setModalOpen(true);
-                    }}
+                    onClick={() => handleEdit(category)}
                     title="Modifier la catégorie"
                   >
                     <FontAwesomeIcon icon={faPen} size="sm" />
                   </ActionIcon>
                   <ActionIcon
-                    variant="light"
+                    variant="filled"
                     color="red"
                     onClick={() => handleDelete(category.id)}
                     title="Supprimer la catégorie"
@@ -213,6 +229,11 @@ function CategoryManagement() {
           setFormData({ name: '', color: '#1971c2', icon: 'fa-folder' });
         }}
         title={editingCategory ? 'Modifier une catégorie' : 'Créer une catégorie'}
+        styles={{
+          header: { backgroundColor: '#1A1B1E', color: 'white' },
+          content: { backgroundColor: '#1A1B1E' },
+          body: { color: 'white' }
+        }}
       >
         <div className="space-y-4">
           <TextInput
@@ -221,12 +242,28 @@ function CategoryManagement() {
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
+            styles={{
+              input: {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              },
+              label: { color: 'white' }
+            }}
           />
           <ColorInput
             label="Couleur"
             value={formData.color}
             onChange={(color) => setFormData({ ...formData, color })}
             required
+            styles={{
+              input: {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              },
+              label: { color: 'white' }
+            }}
           />
           <TextInput
             label="Icône"
@@ -234,9 +271,20 @@ function CategoryManagement() {
             value={formData.icon}
             onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
             required
+            styles={{
+              input: {
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              },
+              label: { color: 'white' }
+            }}
           />
           <div className="flex justify-end">
-            <Button onClick={handleSubmit}>
+            <Button
+              color={editingCategory ? 'blue' : 'green'}
+              onClick={handleSubmit}
+            >
               {editingCategory ? 'Modifier' : 'Créer'}
             </Button>
           </div>

@@ -56,7 +56,7 @@ CTF-Student/
     ├── src/
     │   ├── controllers/   # Contrôleurs
     │   ├── routes/        # Routes API
-    │   ├── middleware/    # Middlewares
+    │   ├── middleware/    # Middleware
     │   └── utils/         # Utilitaires
     └── prisma/           # Base de données
         ├── schema.prisma # Schéma de la base de données

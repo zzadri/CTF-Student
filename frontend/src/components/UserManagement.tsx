@@ -16,30 +16,6 @@ interface User {
   isBlocked?: boolean;
 }
 
-interface CachedData {
-  data: any;
-  timestamp: number;
-}
-
-const cache: { [key: string]: CachedData } = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const fetchWithCache = async (url: string) => {
-  const cachedData = cache[url];
-  const now = Date.now();
-
-  if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    return cachedData.data;
-  }
-
-  const response = await axios.get(url);
-  cache[url] = {
-    data: response.data,
-    timestamp: now
-  };
-  return response.data;
-};
-
 function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,8 +31,9 @@ function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const data = await fetchWithCache(`${import.meta.env.VITE_API_URL}/admin/users`);
-      setUsers(data.users);
+      // Utiliser directement axios sans cache
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/admin/users`);
+      setUsers(response.data.users);
     } catch (error) {
       notifications.show({
         title: 'Erreur',
@@ -78,8 +55,6 @@ function UserManagement() {
       setUsers(users.map(user => 
         user.id === userId ? { ...user, username: response.data.user.username } : user
       ));
-      // Invalider le cache après une modification
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/users`];
       notifications.show({
         title: 'Succès',
         message: 'Pseudo réinitialisé avec succès',
@@ -100,8 +75,6 @@ function UserManagement() {
       setUsers(users.map(user => 
         user.id === userId ? { ...user, score: response.data.user.score } : user
       ));
-      // Invalider le cache après une modification
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/users`];
       notifications.show({
         title: 'Succès',
         message: 'Score réinitialisé avec succès',
@@ -122,8 +95,6 @@ function UserManagement() {
       setUsers(users.map(user => 
         user.id === userId ? { ...user, avatar: response.data.user.avatar } : user
       ));
-      // Invalider le cache après une modification
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/users`];
       notifications.show({
         title: 'Succès',
         message: 'Avatar réinitialisé avec succès',
@@ -168,8 +139,6 @@ function UserManagement() {
       setUsers(users.map(user => 
         user.id === userId ? { ...user, isBlocked: response.data.user.isBlocked } : user
       ));
-      // Invalider le cache après une modification
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/users`];
       notifications.show({
         title: 'Succès',
         message: `Compte ${currentBlockState ? 'débloqué' : 'bloqué'} avec succès`,
@@ -200,7 +169,6 @@ function UserManagement() {
       });
       
       setUsers(users.filter(user => user.id !== userToDelete.id));
-      delete cache[`${import.meta.env.VITE_API_URL}/admin/users`];
       
       notifications.show({
         title: 'Succès',

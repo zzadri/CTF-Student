@@ -72,24 +72,30 @@ export default function ChallengesPage() {
               </div>
             ) : (
               categories.map((category) => (
-                <div 
+                <button 
                   key={category.id}
-                  className="bg-gray-800/50 rounded-lg overflow-hidden hover:bg-gray-800 transition-colors cursor-pointer group"
+                  className="bg-gray-800/50 rounded-lg overflow-hidden hover:bg-gray-800 transition-colors cursor-pointer group text-left w-full block"
                   onClick={() => navigate(`/categories/${category.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      navigate(`/categories/${category.id}`);
+                    }
+                  }}
+                  aria-label={`Voir les challenges de ${category.name}`}
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <i className={`fas ${category.icon || 'fa-folder'} text-xl ${category.color?.replace('bg-', 'text-') || 'text-blue-500'}`}></i>
+                      <i className={`fas ${category.icon ?? 'fa-folder'} text-xl ${category.color?.replace('bg-', 'text-') ?? 'text-blue-500'}`}></i>
                       <div>
                         <h3 className="text-white font-medium">{category.name}</h3>
-                        <span className="text-sm text-cyan-400">{category._count?.challenges || 0} épreuves</span>
+                        <span className="text-sm text-cyan-400">{category._count?.challenges ?? 0} épreuves</span>
                       </div>
                     </div>
                     <p className="text-sm text-gray-400 line-clamp-2">
-                      {category.description || `Cette série d'épreuves vous confronte à des challenges de ${category.name}.`}
+                      {category.description ?? `Cette série d'épreuves vous confronte à des challenges de ${category.name}.`}
                     </p>
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>

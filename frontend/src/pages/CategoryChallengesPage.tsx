@@ -69,9 +69,21 @@ export default function CategoryChallengesPage() {
           const categoryDetails = categoryResponse.data.data || categoryResponse.data;
           setCategory(categoryDetails);
           
-          // Récupérer les challenges de cette catégorie
-          const challengesResponse = await axios.get(`${API_URL}/challenges?categoryId=${categoryId}`);
-          const challengesList = challengesResponse.data.data || challengesResponse.data;
+          // Récupérer uniquement les challenges de cette catégorie spécifique
+          const challengesResponse = await axios.get(`${API_URL}/challenges`, {
+            params: { categoryId }
+          });
+          
+          let challengesList = [];
+          if (Array.isArray(challengesResponse.data)) {
+            challengesList = challengesResponse.data;
+          } else if (challengesResponse.data.data && Array.isArray(challengesResponse.data.data)) {
+            challengesList = challengesResponse.data.data;
+          }
+          
+          // Filtrer pour s'assurer que seuls les challenges de la catégorie actuelle sont affichés
+          challengesList = challengesList.filter((challenge: Challenge) => challenge.categoryId === categoryId);
+          
           setChallenges(challengesList);
         }
       } catch (error) {
@@ -88,6 +100,14 @@ export default function CategoryChallengesPage() {
 
     fetchData();
   }, [categoryId]);
+
+  // Réinitialiser les challenges à chaque changement de catégorie
+  useEffect(() => {
+    if (categoryId !== selectedCategory) {
+      setChallenges([]);
+      setSelectedCategory(categoryId || null);
+    }
+  }, [categoryId, selectedCategory]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);

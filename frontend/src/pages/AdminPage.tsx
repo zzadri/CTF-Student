@@ -45,7 +45,7 @@ const fetchWithCache = async (url: string) => {
   return response.data;
 };
 
-export default function AdminPage({}: AdminPageProps) {
+export default function AdminPage() {
   const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -124,9 +124,7 @@ export default function AdminPage({}: AdminPageProps) {
             {loading ? (
               <Skeleton height={30} width={60} />
             ) : (
-              <>
-                <Text fw={700} size="xl">{stats.totalUsers}</Text>
-              </>
+              <Text fw={700} size="xl">{stats.totalUsers}</Text>
             )}
           </div>
         </Card>
@@ -138,9 +136,7 @@ export default function AdminPage({}: AdminPageProps) {
             {loading ? (
               <Skeleton height={30} width={60} />
             ) : (
-              <>
-                <Text fw={700} size="xl">{stats.totalChallenges}</Text>
-              </>
+              <Text fw={700} size="xl">{stats.totalChallenges}</Text>
             )}
           </div>
         </Card>
@@ -202,7 +198,7 @@ export default function AdminPage({}: AdminPageProps) {
                       : 'text-gray-400 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <i className="fas fa-users mr-2" />
+                  <i className="fas fa-users mr-2"></i>
                   Utilisateurs
                 </button>
                 <button
@@ -213,7 +209,7 @@ export default function AdminPage({}: AdminPageProps) {
                       : 'text-gray-400 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <i className="fas fa-flag mr-2" />
+                  <i className="fas fa-flag mr-2"></i>
                   Challenges
                 </button>
                 <button
@@ -224,7 +220,7 @@ export default function AdminPage({}: AdminPageProps) {
                       : 'text-gray-400 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <i className="fas fa-folder mr-2" />
+                  <i className="fas fa-folder mr-2"></i>
                   Catégories
                 </button>
               </div>

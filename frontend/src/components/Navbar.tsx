@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { NotificationCenter } from './NotificationCenter';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faTrophy, faFlag, faChevronRight, faShieldAlt, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface Category {
   id: string;
@@ -75,7 +78,7 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
     
     return (
       <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center mr-3">
-        <i className="fas fa-user text-gray-300" />
+        <FontAwesomeIcon icon={faUser} className="text-gray-300" />
       </div>
     );
   };
@@ -87,11 +90,11 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
         <h2 className="text-2xl font-bold mb-8">CTF</h2>
         <div className="space-y-4">
           <Link to="/" className="flex items-center p-2 hover:bg-gray-700 rounded">
-            <i className="fas fa-home" />{' '}
+            <FontAwesomeIcon icon={faHome} className="mr-2" />
             Accueil
           </Link>
           <Link to="/leaderboard" className="flex items-center p-2 hover:bg-gray-700 rounded">
-            <i className="fas fa-trophy" />{' '}
+            <FontAwesomeIcon icon={faTrophy} className="mr-2" />
             Classement
           </Link>
           <div className="relative">
@@ -99,9 +102,12 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
               className="flex items-center p-2 hover:bg-gray-700 rounded w-full"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <i className="fas fa-flag" />{' '}
-              Challenges{' '}
-              <i className={`fas fa-chevron-right ml-auto transition-transform ${isMenuOpen ? 'rotate-90' : ''}`} />
+              <FontAwesomeIcon icon={faFlag} className="mr-2" />
+              Challenges
+              <FontAwesomeIcon 
+                icon={faChevronRight} 
+                className={`ml-auto transition-transform ${isMenuOpen ? 'rotate-90' : ''}`} 
+              />
             </button>
             
             {/* Menu déroulant des catégories */}
@@ -121,20 +127,32 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
 
       {/* Section utilisateur */}
       <div className="p-4 border-t border-gray-700">
-        <Link to="/profile" className="block">
-          <div className="flex items-center mb-4 hover:bg-gray-700 p-2 rounded">
-            {renderUserAvatar()}
-            <div>
-              <p className="font-medium truncate max-w-[120px]">{user?.username || 'Utilisateur'}</p>
-              <p className="text-sm text-gray-400">Participant</p>
+        {user?.role === 'ADMIN' && (
+          <Link 
+            to="/admin" 
+            className="flex items-center p-2 mb-4 bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
+          >
+            <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+            Administration
+          </Link>
+        )}
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/profile" className="flex-1">
+            <div className="flex items-center hover:bg-gray-700 p-2 rounded">
+              {renderUserAvatar()}
+              <div>
+                <p className="font-medium truncate max-w-[120px]">{user?.username || 'Utilisateur'}</p>
+                <p className="text-sm text-gray-400">{user?.role === 'ADMIN' ? 'Administrateur' : 'Participant'}</p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+          <NotificationCenter />
+        </div>
         <button
           onClick={logout}
           className="flex items-center p-2 hover:bg-gray-700 rounded w-full text-left text-red-400"
         >
-          <i className="fas fa-sign-out-alt" />{' '}
+          <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
           Déconnexion
         </button>
       </div>

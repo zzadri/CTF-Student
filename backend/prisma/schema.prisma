@@ -14,19 +14,22 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  username  String     @unique
-  password  String
-  avatar    String     @default("")
-  role      Role       @default(USER)
-  score     Int        @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  solves    Solve[]
-  challenges Challenge[]
-  language  Language @relation(fields: [languageId], references: [id])
-  languageId String  @default("fr")
+  id            String         @id @default(uuid())
+  email         String        @unique
+  username      String        @unique
+  password      String
+  avatar        String?
+  role          String        @default("USER")
+  score         Int           @default(0)
+  isBlocked     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  solves        Solve[]
+  languageId    String        @default("fr")
+  language      Language      @relation(fields: [languageId], references: [id])
+  notifications Notification[]
+
+  @@index([languageId])
 }
 
 model Category {
@@ -40,20 +43,59 @@ model Category {
   updatedAt   DateTime   @updatedAt
 }
 
+enum ChallengeType {
+  URL
+  IMAGE
+  FILE
+}
+
+enum ResourceType {
+  LINK
+  FILE
+}
+
+enum Difficulty {
+  EZ
+  EASY
+  NORMAL
+  HARD
+  EXPERT
+}
+
 model Challenge {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
+  subtitle    String?
   description String
+  difficulty  Difficulty
   points      Int
   flag        String
-  difficulty  Difficulty
+  type        ChallengeType
+  url         String?       // Pour les challenges de type URL
+  imageb64    String?       // Pour les challenges de type IMAGE
+  fileb64     String?       // Pour les challenges de type FILE
   categoryId  String
-  category    Category  @relation(fields: [categoryId], references: [id])
-  userId      String?
-  user        User?     @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  category    Category      @relation(fields: [categoryId], references: [id])
+  resources   Resource[]
   solves      Solve[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+}
+
+model Resource {
+  id          String      @id @default(cuid())
+  type        ResourceType
+  value       String
+  name        String?
+  mimeType    String?
+  size        Int?
+  fileData    Bytes?
+  challengeId String
+  challenge   Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([challengeId])
 }
 
 model Solve {
@@ -73,13 +115,19 @@ model Language {
   users    User[]
 }
 
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  type      String   @default("ADMIN")
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 enum Role {
   USER
   ADMIN
-}
-
-enum Difficulty {
-  FACILE
-  MOYEN
-  DIFFICILE
 }

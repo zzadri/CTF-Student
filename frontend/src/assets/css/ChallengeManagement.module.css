@@ -1,0 +1,225 @@
+.select {
+  margin-bottom: 16px;
+}
+
+.input {
+  background-color: rgba(17, 25, 40, 0.8);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 40px;
+}
+
+.input:focus {
+  border-color: #3498db;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.dropdown {
+  background-color: rgba(17, 25, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.option {
+  color: white;
+}
+
+.option:hover {
+  background-color: rgba(52, 152, 219, 0.2);
+}
+
+.modalHeader {
+  background-color: rgba(26, 32, 44, 0.95);
+  color: white;
+  font-weight: 600;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modalContent {
+  background-color: rgba(26, 32, 44, 0.95);
+  color: white;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modalBody {
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modalBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modalBody::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.modalBody::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.modalBody::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.modalClose {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.modalClose:hover {
+  color: white;
+}
+
+.modalInner {
+  padding: 0;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.resourceGroup {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: flex-start;
+}
+
+.resourceTypeSelect {
+  width: 120px;
+  min-width: 120px;
+}
+
+.resourceInput {
+  flex-grow: 1;
+}
+
+.submitButton {
+  background-color: #3498db;
+  transition: background-color 0.2s ease;
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(26, 145, 255, 0.25);
+}
+
+.submitButton:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(26, 145, 255, 0.3);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(26, 145, 255, 0.2);
+}
+
+/* Nouveaux styles pour améliorer l'apparence du tableau */
+.tableContainer {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: rgba(34, 39, 46, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.headerCell {
+  background-color: rgba(30, 35, 45, 0.9) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 12px 16px !important;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.rowHover {
+  transition: background-color 0.2s ease;
+}
+
+.rowHover:hover {
+  background-color: rgba(45, 55, 72, 0.5) !important;
+}
+
+.rowHover td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  color: #e0e0e0;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.badge {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}
+
+.categoryBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.challengeTitle {
+  font-weight: 600;
+  color: #fff;
+  font-size: 15px;
+}
+
+.challengeTitle:hover {
+  color: #1a91ff;
+}
+
+/* Description textarea specific styles */
+.description {
+  font-family: 'Roboto Mono', monospace;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* Fix for Firefox scrollbar in textarea */
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* WebKit scrollbar styles */
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+} 

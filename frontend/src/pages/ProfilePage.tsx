@@ -68,6 +68,7 @@ export default function ProfilePage() {
       try {
         const base64 = await convertToBase64(file);
         setAvatarBase64(base64);
+        setPreviewUrl(base64);
       } catch (error) {
         console.error("Erreur lors de la conversion en base64:", error);
         toast.error("Erreur lors du traitement de l'image");
@@ -79,11 +80,14 @@ export default function ProfilePage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateUser({
+      const updatedUser = await updateUser({
         username,
         languageId: selectedLanguage,
         avatar: avatarBase64
       });
+      setPreviewUrl(updatedUser.avatar || null);
+      setAvatarFile(null);
+      setAvatarBase64(undefined);
       notifications.show({
         title: 'Succès',
         message: 'Profil mis à jour avec succès',

@@ -25,7 +25,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<User>;
+  checkAdminRights: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -66,6 +67,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkAuth = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification de l\'authentification:', error);
+      localStorage.removeItem('token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkAdminRights = async (): Promise<boolean> => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !user) return false;
+
+      const response = await axios.get(`${API_URL}/admin/check`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      return response.data.success;
+    } catch (error) {
+      console.error('Erreur lors de la vérification des droits administrateur:', error);
+      return false;
+    }
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, {
@@ -99,6 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         setUser(response.data.user);
         notifications.show({
           title: 'Succès',
@@ -124,12 +169,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
-  const updateUser = async (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>): Promise<User> => {
     try {
       const response = await axios.put(`${API_URL}/users/profile`, userData);
       if (response.data.success) {
-        setUser(prevUser => prevUser ? { ...prevUser, ...response.data.user } : null);
+        const updatedUser = response.data.user;
+        setUser(prevUser => prevUser ? { ...prevUser, ...updatedUser } : null);
+        return updatedUser;
       }
+      throw new Error('Mise à jour du profil échouée');
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       throw error;
@@ -137,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, checkAdminRights }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Navbar } from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-  _count: {
-    challenges: number;
-  };
-}
+import { Navbar } from '../components/Navbar';
+import { apiService, Category } from '../services/api.service';
 
 export default function ChallengesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -25,12 +12,9 @@ export default function ChallengesPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`${API_URL}/categories`);
-        if (Array.isArray(response.data)) {
-          setCategories(response.data);
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          setCategories(response.data.data);
-        }
+        setLoading(true);
+        const categoriesData = await apiService.getCategories();
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Erreur lors de la récupération des catégories:', error);
       } finally {

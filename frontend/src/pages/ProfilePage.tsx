@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { notifications } from '@mantine/notifications';
-import axios from 'axios';
-import { Navbar } from '../components/Navbar';
 import { toast } from 'react-hot-toast';
-
-interface Language {
-  id: string;
-  name: string;
-}
+import { Navbar } from '../components/Navbar';
+import { apiService, Category } from '../services/api.service';
+import { usersService, Language } from '../services/users.service';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -18,38 +14,34 @@ export default function ProfilePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(user?.avatar || null);
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [selectedLanguage, setSelectedLanguage] = useState(user?.languageId || 'fr');
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
-        if (response.data.success) {
-          setCategories(response.data.data);
-        }
+        const [categoriesData, languagesData] = await Promise.all([
+          apiService.getCategories(),
+          usersService.getLanguages()
+        ]);
+        
+        setCategories(categoriesData);
+        setLanguages(languagesData);
       } catch (error) {
-        console.error('Erreur lors du chargement des catégories:', error);
+        console.error('Erreur lors du chargement des données:', error);
+        notifications.show({
+          title: 'Erreur',
+          message: 'Erreur lors du chargement des données',
+          color: 'red'
+        });
       } finally {
         setLoadingCategories(false);
       }
     };
 
-    const fetchLanguages = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/languages`);
-        if (response.data.success) {
-          setLanguages(response.data.data);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des langues:', error);
-      }
-    };
-
-    fetchCategories();
-    fetchLanguages();
+    fetchData();
   }, []);
 
   const convertToBase64 = (file: File): Promise<string> => {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import { Navbar } from '../components/Navbar';
+import { apiService, Category } from '../services/api.service';
+import { usersService, PublicProfile as UserProfile } from '../services/users.service';
 
 interface Challenge {
   id: string;
@@ -33,27 +34,28 @@ interface PublicProfile {
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [profileRes, categoriesRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/users/${userId}/profile`),
-          axios.get(`${import.meta.env.VITE_API_URL}/categories`)
+        if (!userId) {
+          setError('ID utilisateur non spécifié');
+          return;
+        }
+
+        const [profileData, categoriesData] = await Promise.all([
+          usersService.getPublicProfile(userId),
+          apiService.getCategories()
         ]);
 
-        if (profileRes.data.success) {
-          setProfile(profileRes.data.data);
-        }
-        if (categoriesRes.data.success) {
-          setCategories(categoriesRes.data.data);
-        }
+        setProfile(profileData);
+        setCategories(categoriesData);
       } catch (error) {
         setError('Erreur lors du chargement du profil');
         console.error('Erreur:', error);

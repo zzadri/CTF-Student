@@ -20,7 +20,8 @@ declare global {
 }
 
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  // Récupérer le token depuis le cookie au lieu des en-têtes
+  const token = req.cookies.auth_token;
 
   if (!token) {
     return res.status(401).json({
@@ -34,6 +35,9 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     
     // Vérifier si l'utilisateur est dans la blacklist
     if (tokenBlacklist.isBlacklisted(decoded.userId)) {
+      // Supprimer le cookie si l'utilisateur est blacklisté
+      res.clearCookie('auth_token');
+      
       return res.status(403).json({
         success: false,
         message: 'Votre compte a été bloqué. Veuillez contacter un administrateur.',
@@ -52,6 +56,9 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     });
 
     if (!user) {
+      // Supprimer le cookie si l'utilisateur n'existe plus
+      res.clearCookie('auth_token');
+      
       return res.status(401).json({
         success: false,
         message: 'Utilisateur non trouvé'
@@ -62,6 +69,10 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     if (user.isBlocked) {
       // Ajouter à la blacklist si ce n'est pas déjà fait
       tokenBlacklist.addToBlacklist(decoded.userId);
+      
+      // Supprimer le cookie si l'utilisateur est bloqué
+      res.clearCookie('auth_token');
+      
       return res.status(403).json({
         success: false,
         message: 'Votre compte a été bloqué. Veuillez contacter un administrateur.',
@@ -77,6 +88,9 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     
     next();
   } catch (error) {
+    // Supprimer le cookie si le token est invalide
+    res.clearCookie('auth_token');
+    
     return res.status(403).json({
       success: false,
       message: 'Token invalide ou expiré'

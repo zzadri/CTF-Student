@@ -1,31 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import { notifications } from '@mantine/notifications';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-// Configuration globale d'axios
-axios.defaults.baseURL = API_URL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
-axios.defaults.withCredentials = true; // Important pour les cookies
-
-interface User {
-  id: string;
-  email: string;
-  username: string;
-  avatar: string;
-  role: string;
-  score: number;
-  languageId: string;
-}
+import { authService, User, LoginCredentials, RegisterCredentials, UpdateProfileData } from '../services/auth.service';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateUser: (userData: Partial<User>) => Promise<User>;
+  logout: () => Promise<void>;
+  updateUser: (userData: UpdateProfileData) => Promise<User>;
   checkAdminRights: () => Promise<boolean>;
 }
 
@@ -44,144 +27,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/auth/me`);
-      setUser(response.data.user);
-    } catch (error) {
-      console.error('Erreur lors de la récupération du profil:', error);
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
+    const initAuth = async () => {
+      try {
+        const userData = await authService.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation de l\'authentification:', error);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const response = await axios.get(`${API_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      if (response.data.success) {
-        setUser(response.data.user);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la vérification de l\'authentification:', error);
-      localStorage.removeItem('token');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkAdminRights = async (): Promise<boolean> => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token || !user) return false;
-
-      const response = await axios.get(`${API_URL}/admin/check`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      return response.data.success;
-    } catch (error) {
-      console.error('Erreur lors de la vérification des droits administrateur:', error);
-      return false;
-    }
-  };
+    };
+    
+    initAuth();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password
-      });
-
-      if (response.data.success && response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        setUser(response.data.user);
-      } else {
-        throw new Error('Réponse invalide du serveur');
-      }
+      const userData = await authService.login({ email, password });
+      setUser(userData);
     } catch (error) {
       console.error('Erreur de connexion:', error);
-      if (axios.isAxiosError(error)) {
-        throw new Error(error.response?.data?.message || 'Erreur lors de la connexion');
-      }
       throw error;
     }
   };
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, {
-        username,
-        email,
-        password,
+      const userData = await authService.register({ username, email, password });
+      setUser(userData);
+      notifications.show({
+        title: 'Succès',
+        message: 'Inscription réussie !',
+        color: 'green',
       });
-
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
-        setUser(response.data.user);
-        notifications.show({
-          title: 'Succès',
-          message: 'Inscription réussie !',
-          color: 'green',
-        });
-        return response.data;
-      }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Une erreur est survenue lors de l\'inscription';
+      const message = error.message || 'Une erreur est survenue lors de l\'inscription';
       notifications.show({
         title: 'Erreur',
         message: message,
         color: 'red',
       });
-      throw new Error(message);
+      throw error;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
   };
 
-  const updateUser = async (userData: Partial<User>): Promise<User> => {
+  const updateUser = async (userData: UpdateProfileData): Promise<User> => {
     try {
-      const response = await axios.put(`${API_URL}/users/profile`, userData);
-      if (response.data.success) {
-        const updatedUser = response.data.user;
-        setUser(prevUser => prevUser ? { ...prevUser, ...updatedUser } : null);
-        return updatedUser;
-      }
-      throw new Error('Mise à jour du profil échouée');
+      const updatedUser = await authService.updateProfile(userData);
+      setUser(prevUser => prevUser ? { ...prevUser, ...updatedUser } : null);
+      return updatedUser;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du profil:', error);
       throw error;
     }
+  };
+
+  const checkAdminRights = async (): Promise<boolean> => {
+    return authService.checkAdminRights();
   };
 
   return (

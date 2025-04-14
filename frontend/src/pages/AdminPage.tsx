@@ -3,51 +3,17 @@ import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { Paper, Text, Grid, Card, MantineProvider, Skeleton } from '@mantine/core';
-import axios from 'axios';
+import { apiService, Category, Stats } from '../services/api.service';
+import { adminApiService } from '../services/admin-api.service';
 
 // Chargement paresseux des composants
 const UserManagement = lazy(() => import('../components/UserManagement'));
 const CategoryManagement = lazy(() => import('../components/CategoryManagement'));
 const ChallengeManagement = lazy(() => import('../components/ChallengeManagement'));
 
-interface AdminPageProps {}
-
-interface Stats {
-  totalUsers: number;
-  totalChallenges: number;
-  totalCategories: number;
-  activeUsers: number;
-  completionRate: number;
-}
-
-interface CachedData {
-  data: any;
-  timestamp: number;
-}
-
-// Cache des données avec une durée de validité de 5 minutes
-const cache: { [key: string]: CachedData } = {};
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const fetchWithCache = async (url: string) => {
-  const cachedData = cache[url];
-  const now = Date.now();
-
-  if (cachedData && now - cachedData.timestamp < CACHE_DURATION) {
-    return cachedData.data;
-  }
-
-  const response = await axios.get(url);
-  cache[url] = {
-    data: response.data,
-    timestamp: now
-  };
-  return response.data;
-};
-
 export default function AdminPage() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'categories'>('users');
   const [stats, setStats] = useState<Stats>({
@@ -82,14 +48,12 @@ export default function AdminPage() {
     const fetchData = async () => {
       try {
         const [statsData, categoriesData] = await Promise.all([
-          fetchWithCache(`${import.meta.env.VITE_API_URL}/admin/stats`),
-          fetchWithCache(`${import.meta.env.VITE_API_URL}/categories`)
+          adminApiService.getAdminStats(),
+          apiService.getCategories()
         ]);
         
         setStats(statsData);
-        if (categoriesData.success) {
-          setCategories(categoriesData.data);
-        }
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Erreur lors de la récupération des données:', error);
       } finally {
@@ -173,12 +137,12 @@ export default function AdminPage() {
                 <button
                   onClick={() => {
                     // Vider le cache lors de l'actualisation
-                    Object.keys(cache).forEach(key => delete cache[key]);
+                    apiService.clearCache();
                     window.location.reload();
                   }}
                   className="px-4 py-2 bg-blue-600/80 text-white rounded hover:bg-blue-700/90 transition-colors flex items-center space-x-2"
                 >
-                  <i className="fas fa-sync-alt" />
+                  <i className="fas fa-sync-alt"></i>
                   <span>Actualiser</span>
                 </button>
               </div>
@@ -256,7 +220,7 @@ export default function AdminPage() {
                         window.dispatchEvent(event);
                       }}
                     >
-                      <i className="fas fa-plus" />
+                      <i className="fas fa-plus"></i>
                       <span>Créer un challenge</span>
                     </button>
                   </div>
@@ -280,7 +244,7 @@ export default function AdminPage() {
                         window.dispatchEvent(event);
                       }}
                     >
-                      <i className="fas fa-plus" />
+                      <i className="fas fa-plus"></i>
                       <span>Nouvelle catégorie</span>
                     </button>
                   </div>

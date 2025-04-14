@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { notifications } from '@mantine/notifications';
-import axios from 'axios';
+import { usersService } from '../services/users.service';
+import axios from '../services/axios.config';
 
 interface Notification {
   id: string;
@@ -9,6 +10,11 @@ interface Notification {
   type: string;
   read: boolean;
   createdAt: string;
+}
+
+interface NotificationsResponse {
+  notifications: Notification[];
+  success: boolean;
 }
 
 export const useNotifications = () => {
@@ -39,28 +45,31 @@ export const useNotifications = () => {
 
   const fetchUnreadNotifications = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/notifications`);
-      if (response.data.success) {
-        setUnreadNotifications(response.data.notifications);
+      const notificationsData = await usersService.getNotifications();
+      // S'assurer que c'est un tableau
+      if (Array.isArray(notificationsData)) {
+        setUnreadNotifications(notificationsData);
+      } else {
+        // Si c'est un objet avec une propriété notifications
+        const response = notificationsData as unknown as NotificationsResponse;
+        setUnreadNotifications(response.notifications || []);
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des notifications:', error);
+      setUnreadNotifications([]); // Définir un tableau vide en cas d'erreur
     }
   };
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/users/notifications/${notificationId}`
+      await usersService.markNotificationAsRead(notificationId);
+      
+      setUnreadNotifications(prev =>
+        prev.filter(notification => notification.id !== notificationId)
       );
-      if (response.data.success) {
-        setUnreadNotifications(prev =>
-          prev.filter(notification => notification.id !== notificationId)
-        );
-        
-        if (socket?.connected) {
-          socket.emit('notification_read', notificationId);
-        }
+      
+      if (socket?.connected) {
+        socket.emit('notification_read', notificationId);
       }
     } catch (error) {
       console.error('Erreur lors du marquage de la notification comme lue:', error);
@@ -73,7 +82,7 @@ export const useNotifications = () => {
   };
 
   return {
-    unreadNotifications,
+    unreadNotifications: Array.isArray(unreadNotifications) ? unreadNotifications : [],
     markAsRead,
     connected
   };

@@ -1,42 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Navbar } from '../components/Navbar';
 import { LoadingOverlay, Button } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFlag } from '@fortawesome/free-solid-svg-icons';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-  _count: {
-    challenges: number;
-  };
-}
-
-interface Challenge {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  difficulty: 'EZ' | 'EASY' | 'NORMAL' | 'HARD' | 'EXPERT';
-  points: number;
-  categoryId: string;
-  category: {
-    name: string;
-    color: string;
-  };
-  isSolved?: boolean;
-  solvedBy?: {
-    _count: number;
-  };
-}
+import { apiService, Category, Challenge } from '../services/api.service';
 
 export default function CategoryChallengesPage() {
   const { categoryId } = useParams<{ categoryId: string }>();
@@ -53,38 +22,16 @@ export default function CategoryChallengesPage() {
       try {
         setLoading(true);
 
-        // Récupérer toutes les catégories pour la barre de navigation
-        const categoriesResponse = await axios.get(`${API_URL}/categories`);
-        let categoryData = [];
-        if (Array.isArray(categoriesResponse.data)) {
-          categoryData = categoriesResponse.data;
-        } else if (categoriesResponse.data.data && Array.isArray(categoriesResponse.data.data)) {
-          categoryData = categoriesResponse.data.data;
-        }
+        const categoryData = await apiService.getCategories();
         setCategories(categoryData);
-        
+
         if (categoryId) {
-          // Récupérer les détails de la catégorie spécifique
-          const categoryResponse = await axios.get(`${API_URL}/categories/${categoryId}`);
-          const categoryDetails = categoryResponse.data.data || categoryResponse.data;
+          const categoryDetails = await apiService.getCategory(categoryId);
           setCategory(categoryDetails);
-          
-          // Récupérer uniquement les challenges de cette catégorie spécifique
-          const challengesResponse = await axios.get(`${API_URL}/challenges`, {
-            params: { categoryId }
-          });
-          
-          let challengesList = [];
-          if (Array.isArray(challengesResponse.data)) {
-            challengesList = challengesResponse.data;
-          } else if (challengesResponse.data.data && Array.isArray(challengesResponse.data.data)) {
-            challengesList = challengesResponse.data.data;
-          }
-          
-          // Filtrer pour s'assurer que seuls les challenges de la catégorie actuelle sont affichés
-          challengesList = challengesList.filter((challenge: Challenge) => challenge.categoryId === categoryId);
-          
-          setChallenges(challengesList);
+
+          const challengesList = await apiService.getChallenges({ categoryId });
+          const filteredChallenges = challengesList.filter((challenge: Challenge) => challenge.categoryId === categoryId);
+          setChallenges(filteredChallenges);
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des données:', error);
@@ -105,7 +52,7 @@ export default function CategoryChallengesPage() {
   useEffect(() => {
     if (categoryId !== selectedCategory) {
       setChallenges([]);
-      setSelectedCategory(categoryId || null);
+      setSelectedCategory(categoryId ?? null);
     }
   }, [categoryId, selectedCategory]);
 

@@ -1,40 +1,8 @@
 import { useState, useEffect, KeyboardEvent } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-  _count: {
-    challenges: number;
-  };
-}
-
-interface LeaderboardUser {
-  id: string;
-  username: string;
-  avatar: string;
-  score: number;
-  challengesCompleted: number;
-  recentAchievements: Array<{
-    challengeName: string;
-    points: number;
-    category: string;
-    completedAt: string;
-  }>;
-  rank?: number;
-}
-
-interface LeaderboardResponse {
-  success: boolean;
-  data: LeaderboardUser[];
-}
+import { apiService, Category } from '../services/api.service';
+import { usersService, LeaderboardUser } from '../services/users.service';
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
@@ -46,25 +14,14 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [usersResponse, categoriesResponse] = await Promise.all([
-          axios.get<LeaderboardResponse>(`${API_URL}/users/leaderboard`),
-          axios.get(`${API_URL}/categories`)
+        setLoading(true);
+        const [usersData, categoriesData] = await Promise.all([
+          usersService.getLeaderboard(),
+          apiService.getCategories()
         ]);
 
-        if (usersResponse.data.success) {
-          // Ajouter le rang aux utilisateurs
-          const rankedUsers = usersResponse.data.data.map((user, index) => ({
-            ...user,
-            rank: index + 1
-          }));
-          setUsers(rankedUsers);
-        }
-
-        if (Array.isArray(categoriesResponse.data)) {
-          setCategories(categoriesResponse.data);
-        } else if (categoriesResponse.data.data) {
-          setCategories(categoriesResponse.data.data);
-        }
+        setUsers(usersData);
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Erreur lors de la récupération des données:', error);
       } finally {

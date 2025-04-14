@@ -4,17 +4,7 @@ import { Link } from 'react-router-dom';
 import { NotificationCenter } from './NotificationCenter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faTrophy, faFlag, faChevronRight, faShieldAlt, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
-
-interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-  _count: {
-    challenges: number;
-  };
-}
+import { Category } from '../services/api.service';
 
 interface NavbarProps {
   categories: Category[];
@@ -56,10 +46,10 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
           selectedCategory === category.id ? 'bg-gray-700 text-white' : 'text-gray-300'
         }`}
       >
-        <i className={`fas ${category.icon || 'fa-folder'} ${getIconColor(category.color)}`} />{' '}
+        <i className={`fas ${category.icon ?? 'fa-folder'} ${getIconColor(category.color)}`} />{' '}
         {category.name}{' '}
         <span className="text-xs text-gray-500">
-          ({category._count?.challenges || 0})
+          ({category._count?.challenges ?? 0})
         </span>
       </button>
     ));
@@ -149,7 +139,9 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
           <NotificationCenter />
         </div>
         <button
-          onClick={logout}
+          onClick={async () => {
+            await logout();
+          }}
           className="flex items-center p-2 hover:bg-gray-700 rounded w-full text-left text-red-400"
         >
           <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />

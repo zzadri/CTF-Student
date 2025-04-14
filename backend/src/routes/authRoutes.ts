@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getCurrentUser } from '../controllers/authController';
+import { register, login, getCurrentUser, logout } from '../controllers/authController';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -71,8 +71,6 @@ router.post('/register', register);
  *             schema:
  *               type: object
  *               properties:
- *                 token:
- *                   type: string
  *                 user:
  *                   type: object
  *       401:
@@ -87,7 +85,7 @@ router.post('/login', login);
  *     summary: Récupérer les informations de l'utilisateur connecté
  *     tags: [Authentication]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Informations de l'utilisateur
@@ -108,5 +106,17 @@ router.post('/login', login);
  *         description: Non authentifié
  */
 router.get('/me', authenticateToken, getCurrentUser);
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Déconnexion de l'utilisateur
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ */
+router.post('/logout', logout);
 
 export default router; 

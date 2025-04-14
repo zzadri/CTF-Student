@@ -1,27 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, TextInput, ColorInput, LoadingOverlay, ActionIcon, Text } from '@mantine/core';
+import { Table, Button, Modal, TextInput, ColorInput, LoadingOverlay, ActionIcon } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTrash, faFolder, faCode, faLock, faBug, faGears } from '@fortawesome/free-solid-svg-icons';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import axios from 'axios';
+import { adminApiService } from '../services/admin-api.service';
+import { apiService, Category } from '../services/api.service';
 
-// Ajouter les icônes à la bibliothèque FontAwesome
 library.add(faFolder, faCode, faLock, faBug, faGears);
 
-interface Category {
-  id: string;
-  name: string;
-  color: string | null;
-  icon: string | null;
+interface CategoryWithCount extends Category {
   challengeCount: number;
 }
 
 function CategoryManagement() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryWithCount | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     color: '#1971c2',
@@ -40,15 +36,12 @@ function CategoryManagement() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
-      if (response.data.success && response.data.data) {
-        setCategories(response.data.data.map((category: any) => ({
-          ...category,
-          challengeCount: category._count.challenges
-        })));
-      } else {
-        throw new Error('Format de réponse invalide');
-      }
+      setLoading(true);
+      const categoriesData = await apiService.getCategories();
+      setCategories(categoriesData.map((category: Category) => ({
+        ...category,
+        challengeCount: category._count?.challenges ?? 0
+      })));
     } catch (error) {
       notifications.show({
         title: 'Erreur',
@@ -75,42 +68,28 @@ function CategoryManagement() {
         return;
       }
 
+      const categoryData = {
+        name: formData.name,
+        color: formData.color,
+        icon: formData.icon
+      };
+
       if (editingCategory) {
-        // Route PUT pour modifier une catégorie
-        const response = await axios.put(
-          `${import.meta.env.VITE_API_URL}/admin/categories/${editingCategory.id}`,
-          {
-            name: formData.name,
-            color: formData.color,
-            icon: formData.icon
-          }
-        );
-
-        if (response.data.success) {
-          notifications.show({
-            title: 'Succès',
-            message: 'Catégorie modifiée avec succès',
-            color: 'green'
-          });
-        }
+        // Mise à jour d'une catégorie existante
+        await adminApiService.updateCategory(editingCategory.id, categoryData);
+        notifications.show({
+          title: 'Succès',
+          message: 'Catégorie modifiée avec succès',
+          color: 'green'
+        });
       } else {
-        // Route POST pour créer une catégorie
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_URL}/admin/categories`,
-          {
-            name: formData.name,
-            color: formData.color,
-            icon: formData.icon
-          }
-        );
-
-        if (response.data.success) {
-          notifications.show({
-            title: 'Succès',
-            message: 'Catégorie créée avec succès',
-            color: 'green'
-          });
-        }
+        // Création d'une nouvelle catégorie
+        await adminApiService.createCategory(categoryData);
+        notifications.show({
+          title: 'Succès',
+          message: 'Catégorie créée avec succès',
+          color: 'green'
+        });
       }
 
       setModalOpen(false);
@@ -128,19 +107,13 @@ function CategoryManagement() {
 
   const handleDelete = async (categoryId: string) => {
     try {
-      // Route DELETE pour supprimer une catégorie
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/admin/categories/${categoryId}`
-      );
-
-      if (response.data.success) {
-        notifications.show({
-          title: 'Succès',
-          message: 'Catégorie supprimée avec succès',
-          color: 'green'
-        });
-        fetchCategories();
-      }
+      await adminApiService.deleteCategory(categoryId);
+      notifications.show({
+        title: 'Succès',
+        message: 'Catégorie supprimée avec succès',
+        color: 'green'
+      });
+      fetchCategories();
     } catch (error: any) {
       notifications.show({
         title: 'Erreur',
@@ -150,7 +123,7 @@ function CategoryManagement() {
     }
   };
 
-  const handleEdit = (category: Category) => {
+  const handleEdit = (category: CategoryWithCount) => {
     setEditingCategory(category);
     setFormData({
       name: category.name,
@@ -184,9 +157,9 @@ function CategoryManagement() {
                 <div className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded"
-                    style={{ backgroundColor: category.color || '#1971c2' }}
+                    style={{ backgroundColor: category.color ?? '#1971c2' }}
                   />
-                  <span className="text-white">{category.color || '#1971c2'}</span>
+                  <span className="text-white">{category.color ?? '#1971c2'}</span>
                 </div>
               </td>
               <td className="text-center">

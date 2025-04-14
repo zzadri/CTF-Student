@@ -6,6 +6,7 @@ import { LoginBody, RegisterBody } from '../interfaces/auth.interface';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
 
 export const register = async (req: Request<{}, {}, RegisterBody>, res: Response) => {
   try {
@@ -84,10 +85,17 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
       { expiresIn: '24h' }
     );
 
+    // Stocker le token dans un cookie HTTP-only
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: COOKIE_MAX_AGE
+    });
+
     return res.status(201).json({
       success: true,
       message: "Compte créé avec succès",
-      token,
       user: {
         id: user.id,
         email: user.email,
@@ -140,7 +148,9 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         password: true,
         role: true,
         avatar: true,
-        isBlocked: true
+        isBlocked: true,
+        score: true,
+        languageId: true
       }
     });
 
@@ -184,16 +194,25 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
       { expiresIn: '24h' }
     );
 
-    // Envoi de la réponse
+    // Stocker le token dans un cookie HTTP-only
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: COOKIE_MAX_AGE
+    });
+
+    // Envoi de la réponse sans inclure le token
     res.json({
       success: true,
-      token,
       user: {
         id: user.id,
         email: user.email,
         username: user.username,
         role: user.role,
-        avatar: user.avatar
+        avatar: user.avatar,
+        score: user.score,
+        languageId: user.languageId
       }
     });
   } catch (error) {
@@ -245,6 +264,25 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du profil'
+    });
+  }
+};
+
+// Ajouter une route de déconnexion pour effacer le cookie
+export const logout = async (req: Request, res: Response) => {
+  try {
+    // Supprimer le cookie d'authentification
+    res.clearCookie('auth_token');
+    
+    return res.json({
+      success: true,
+      message: 'Déconnexion réussie'
+    });
+  } catch (error) {
+    console.error('Erreur lors de la déconnexion:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la déconnexion'
     });
   }
 }; 

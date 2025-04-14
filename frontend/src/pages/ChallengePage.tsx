@@ -1,54 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Navbar } from '../components/Navbar';
 import { LoadingOverlay, Badge, Button, Paper, TextInput, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFlag, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons';
+import { apiService, Category, Challenge, Resource } from '../services/api.service';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string | null;
-  _count: {
-    challenges: number;
-  };
-}
-
-interface Resource {
-  id: string;
-  type: 'LINK' | 'FILE';
-  value: string;
-  name?: string;
-}
-
-interface Challenge {
-  id: string;
-  title: string;
-  subtitle?: string;
-  description: string;
-  difficulty: 'EZ' | 'EASY' | 'NORMAL' | 'HARD' | 'EXPERT';
-  points: number;
-  categoryId: string;
-  category: {
-    name: string;
-    color: string;
-    icon?: string;
-  };
-  resources: Resource[];
-  isSolved?: boolean;
-  solvedBy?: {
-    _count: number;
-  };
-  type: 'URL' | 'FILE' | 'IMAGE';
-  url?: string;
-  imageb64?: string;
-}
 
 export default function ChallengePage() {
   const { id } = useParams<{ id: string }>();
@@ -67,19 +26,12 @@ export default function ChallengePage() {
         setLoading(true);
 
         // Récupérer toutes les catégories pour la barre de navigation
-        const categoriesResponse = await axios.get(`${API_URL}/categories`);
-        let categoryData = [];
-        if (Array.isArray(categoriesResponse.data)) {
-          categoryData = categoriesResponse.data;
-        } else if (categoriesResponse.data.data && Array.isArray(categoriesResponse.data.data)) {
-          categoryData = categoriesResponse.data.data;
-        }
+        const categoryData = await apiService.getCategories();
         setCategories(categoryData);
         
         if (id) {
           // Récupérer les détails du challenge
-          const challengeResponse = await axios.get(`${API_URL}/challenges/${id}`);
-          const challengeDetails = challengeResponse.data.data || challengeResponse.data;
+          const challengeDetails = await apiService.getChallenge(id);
           setChallenge(challengeDetails);
           
           if (challengeDetails?.categoryId) {
@@ -112,11 +64,9 @@ export default function ChallengePage() {
     try {
       setSubmitting(true);
       
-      const response = await axios.post(`${API_URL}/challenges/${id}/verify`, {
-        flag: flagInput
-      });
+      const response = await apiService.verifyFlag(id, flagInput.trim());
       
-      if (response.data.success) {
+      if (response.success) {
         notifications.show({
           title: 'Bravo!',
           message: 'Flag correct! Vous avez résolu ce challenge.',
@@ -223,7 +173,7 @@ export default function ChallengePage() {
             <>
               {/* En-tête du challenge */}
               <div className="mb-6">
-                <div className="bg-gray-800 rounded-lg shadow-lg border-l-4 p-6" style={{ borderLeftColor: challenge.category.color || '#ff4444' }}>
+                <div className="bg-gray-800 rounded-lg shadow-lg border-l-4 p-6" style={{ borderLeftColor: challenge.category.color ?? '#ff4444' }}>
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
                       <h1 className="text-3xl font-bold text-white">{challenge.title}</h1>
@@ -248,7 +198,7 @@ export default function ChallengePage() {
                       </div>
                       <div className="bg-gray-700 text-white px-3 py-1 rounded text-sm font-medium flex items-center gap-1">
                         <FontAwesomeIcon icon={faFlag} />
-                        <span>{challenge.solvedBy?._count || 0} résolutions</span>
+                        <span>{challenge.solvedBy?._count ?? 0} résolutions</span>
                       </div>
                     </div>
                   </div>

@@ -9,6 +9,9 @@ export const NotificationBell: React.FC = () => {
   const { unreadNotifications, markAsRead, connected } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  
+  // Garantir que unreadNotifications est toujours un tableau
+  const notifications = Array.isArray(unreadNotifications) ? unreadNotifications : [];
 
   // Fermer le menu des notifications lors d'un clic à l'extérieur
   useEffect(() => {
@@ -29,7 +32,7 @@ export const NotificationBell: React.FC = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    for (const notification of unreadNotifications) {
+    for (const notification of notifications) {
       await markAsRead(notification.id);
     }
   };
@@ -49,9 +52,9 @@ export const NotificationBell: React.FC = () => {
             isOpen ? 'rotate-[15deg]' : ''
           }`}
         />
-        {unreadNotifications.length > 0 && (
+        {notifications.length > 0 && (
           <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
-            {unreadNotifications.length}
+            {notifications.length}
           </span>
         )}
         <FontAwesomeIcon
@@ -74,7 +77,7 @@ export const NotificationBell: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center space-x-3">
-              {unreadNotifications.length > 0 && (
+              {notifications.length > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
                   className="text-xs text-gray-400 hover:text-white transition-colors duration-200 flex items-center space-x-1"
@@ -93,14 +96,14 @@ export const NotificationBell: React.FC = () => {
           </div>
 
           <div className="max-h-[32rem] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-            {unreadNotifications.length === 0 ? (
+            {notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-400 bg-gray-800/50">
                 <FontAwesomeIcon icon={faBell} className="text-3xl mb-3 opacity-50" />
                 <p>Aucune notification non lue</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-700/50">
-                {unreadNotifications.map((notification) => (
+                {notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className="p-4 hover:bg-gray-700/50 transition-colors duration-200 group relative"

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes';
@@ -43,6 +44,9 @@ app.options('*', cors());
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware pour parser les cookies
+app.use(cookieParser());
 
 // Middleware de logging
 app.use((req, res, next) => {

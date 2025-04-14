@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { parse } from 'cookie';
 
 let socketService: SocketService | null = null;
 
@@ -31,10 +32,19 @@ export class SocketService {
       serveClient: false
     });
 
-    // Middleware d'authentification
+    // Middleware d'authentification par cookie
     this.io.use((socket, next) => {
       try {
-        const token = socket.handshake.auth.token;
+        // Essayer d'extraire le cookie
+        const cookies = socket.handshake.headers.cookie;
+        if (!cookies) {
+          return next(new Error('Token d\'authentification manquant'));
+        }
+
+        // Parser les cookies
+        const parsedCookies = parse(cookies);
+        const token = parsedCookies['auth_token'];
+        
         if (!token) {
           return next(new Error('Token d\'authentification manquant'));
         }

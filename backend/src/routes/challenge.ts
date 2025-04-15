@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { getAllChallenges, getChallengeById, getResource } from '../controllers/challengeController';
+import { getAllChallenges, getChallengeById, getResource, verifyFlag } from '../controllers/challengeController';
+import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = Router();
 
@@ -47,5 +48,41 @@ router.get('/:id', getChallengeById);
  *         description: ID de la ressource
  */
 router.get('/resources/:id', getResource);
+
+/**
+ * @swagger
+ * /challenges/{id}/verify:
+ *   post:
+ *     summary: Vérifier un flag pour un challenge
+ *     tags: [Challenges]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID du challenge
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               flag:
+ *                 type: string
+ *                 required: true
+ *                 description: Le flag à vérifier
+ *     responses:
+ *       200:
+ *         description: Flag correct, points attribués
+ *       400:
+ *         description: Flag incorrect ou challenge déjà résolu
+ *       401:
+ *         description: Non authentifié
+ *       404:
+ *         description: Challenge non trouvé
+ */
+router.post('/:id/verify', authenticateToken, verifyFlag);
 
 export default router; 

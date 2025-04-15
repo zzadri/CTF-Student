@@ -6,6 +6,7 @@ import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFlag, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons';
 import { apiService, Category, Challenge, Resource } from '../services/api.service';
+import { FlagSubmissionStatus } from '../types/challenge.types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -17,7 +18,12 @@ export default function ChallengePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [flagInput, setFlagInput] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<FlagSubmissionStatus>({
+    loading: false,
+    error: null,
+    success: false,
+    points: 0
+  });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,35 +67,60 @@ export default function ChallengePage() {
   const handleSubmitFlag = async () => {
     if (!flagInput.trim() || !id) return;
     
+    setSubmitStatus({
+      loading: true,
+      error: null,
+      success: false,
+      points: 0
+    });
+    
     try {
-      setSubmitting(true);
-      
       const response = await apiService.verifyFlag(id, flagInput.trim());
       
       if (response.success) {
+        setSubmitStatus({
+          loading: false,
+          error: null,
+          success: true,
+          points: response.points
+        });
+
         notifications.show({
           title: 'Bravo!',
-          message: 'Flag correct! Vous avez résolu ce challenge.',
+          message: `${response.message} ${response.points ? `(+${response.points} points)` : ''}`,
           color: 'green'
         });
         
         // Mettre à jour le statut du challenge comme résolu
         setChallenge(prev => prev ? { ...prev, isSolved: true } : null);
+        
+        // Réinitialiser le champ de saisie
+        setFlagInput('');
       } else {
+        setSubmitStatus({
+          loading: false,
+          error: response.message,
+          success: false
+        });
+
         notifications.show({
           title: 'Incorrect',
-          message: 'Le flag soumis n\'est pas correct. Essayez encore!',
+          message: response.message,
           color: 'red'
         });
       }
     } catch (error) {
+      setSubmitStatus({
+        loading: false,
+        error: 'Une erreur est survenue lors de la vérification du flag',
+        success: false
+      });
+
       notifications.show({
         title: 'Erreur',
         message: 'Une erreur est survenue lors de la vérification du flag',
         color: 'red'
       });
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -173,7 +204,7 @@ export default function ChallengePage() {
             <>
               {/* En-tête du challenge */}
               <div className="mb-6">
-                <div className="bg-gray-800 rounded-lg shadow-lg border-l-4 p-6" style={{ borderLeftColor: challenge.category.color ?? '#ff4444' }}>
+                <div className="bg-gray-800 rounded-lg shadow-lg p-6">
                   <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
                       <h1 className="text-3xl font-bold text-white">{challenge.title}</h1>
@@ -241,21 +272,28 @@ export default function ChallengePage() {
                         value={flagInput}
                         onChange={(e) => setFlagInput(e.currentTarget.value)}
                         className="flex-1"
-                        disabled={challenge.isSolved || submitting}
+                        disabled={challenge.isSolved || submitStatus.loading}
+                        error={submitStatus.error}
                       />
                       <Button 
                         color="blue" 
                         onClick={handleSubmitFlag}
-                        loading={submitting}
-                        disabled={challenge.isSolved}
+                        loading={submitStatus.loading}
+                        disabled={challenge.isSolved || !flagInput.trim()}
                       >
-                        Valider
+                        {submitStatus.loading ? 'Vérification...' : 'Valider'}
                       </Button>
                     </div>
                     
-                    {challenge.isSolved && (
+                    {submitStatus.error && (
+                      <Text className="mt-4 text-red-400">
+                        {submitStatus.error}
+                      </Text>
+                    )}
+                    
+                    {submitStatus.success && (
                       <Text className="mt-4 text-green-400">
-                        Bravo! Vous avez déjà résolu ce challenge.
+                        Bravo! Vous avez résolu ce challenge {submitStatus.points ? `et gagné ${submitStatus.points} points!` : ''}
                       </Text>
                     )}
                   </Paper>

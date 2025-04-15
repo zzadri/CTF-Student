@@ -1,5 +1,6 @@
 import { notifications } from '@mantine/notifications';
 import axios, { API_URL } from './axios.config';
+import { FlagValidationResponse } from '../types/challenge.types';
 
 // Interfaces pour les types de données
 export interface Category {
@@ -149,12 +150,47 @@ class ApiService {
   }
 
   // Vérifier un flag
-  async verifyFlag(challengeId: string, flag: string): Promise<{ success: boolean }> {
+  async verifyFlag(challengeId: string, flag: string): Promise<FlagValidationResponse> {
     try {
       const response = await axios.post(`${API_URL}/challenges/${challengeId}/verify`, { flag });
-      return normalizeResponse(response.data);
-    } catch (error) {
-      return handleError(error, 'Erreur lors de la vérification du flag');
+      const data = normalizeResponse(response.data);
+
+      if (data.success) {
+        // Mettre à jour le cache des challenges pour marquer celui-ci comme résolu
+        this.clearCache();
+        
+        return {
+          success: true,
+          message: data.message || 'Félicitations ! Flag correct',
+          points: data.points
+        };
+      }
+
+      return {
+        success: false,
+        message: data.message || 'Flag incorrect'
+      };
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        return {
+          success: false,
+          message: error.response.data.message || 'Flag incorrect ou challenge déjà résolu'
+        };
+      }
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          message: 'Vous devez être connecté pour soumettre un flag'
+        };
+      }
+      if (error.response?.status === 404) {
+        return {
+          success: false,
+          message: 'Challenge introuvable'
+        };
+      }
+      
+      return handleError(error, 'Une erreur est survenue lors de la vérification du flag');
     }
   }
 

@@ -3,34 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { apiService, Category } from '../services/api.service';
 import { usersService, PublicProfile as UserProfile } from '../services/users.service';
-
-interface Challenge {
-  id: string;
-  name: string;
-  category: string;
-  points: number;
-  solvedAt: string;
-}
-
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-}
-
-interface PublicProfile {
-  id: string;
-  username: string;
-  avatar: string;
-  score: number;
-  language: string;
-  rank: number;
-  solvedChallenges: {
-    total: number;
-    recent: Challenge[];
-  };
-}
+import type { Challenge, Badge, PublicProfile as IPublicProfile } from '../types/profile.types';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();

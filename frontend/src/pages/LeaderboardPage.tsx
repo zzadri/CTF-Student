@@ -43,19 +43,6 @@ export default function LeaderboardPage() {
     }
   };
 
-  const getTopThreeClass = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return 'bg-gradient-to-r from-yellow-500 to-yellow-600';
-      case 2:
-        return 'bg-gradient-to-r from-gray-300 to-gray-400';
-      case 3:
-        return 'bg-gradient-to-r from-amber-600 to-amber-700';
-      default:
-        return 'bg-gray-800/50';
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex min-h-screen bg-gray-900">

@@ -1,41 +1,23 @@
 import axios, { API_URL } from './axios.config';
 import { normalizeResponse, handleError } from './api.service';
-
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  avatar: string;
-  role: string;
-  score: number;
-  languageId: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterCredentials {
-  username: string;
-  email: string;
-  password: string;
-}
-
-export interface UpdateProfileData {
-  username?: string;
-  avatar?: string;
-  languageId?: string;
-}
+import { User, LoginCredentials, RegisterCredentials, UpdateProfileData } from '../types/auth.types';
 
 class AuthService {
+  private user: User | null = null;
+
   // Vérifier si l'utilisateur est connecté et récupérer ses informations
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await axios.get(`${API_URL}/auth/me`);
+      // Si nous avons déjà les informations utilisateur en mémoire, les retourner
+      if (this.user) {
+        return this.user;
+      }
 
+      const response = await axios.get(`${API_URL}/auth/me`);
+      
       if (response.data.success) {
-        return response.data.user;
+        this.user = response.data.user;
+        return this.user;
       }
       return null;
     } catch (error) {
@@ -49,7 +31,8 @@ class AuthService {
     try {
       const response = await axios.post(`${API_URL}/auth/login`, credentials);
       
-      if (response.data.success) {
+      if (response.data.success && response.data.user) {
+        this.user = response.data.user;
         return response.data.user;
       } else {
         throw new Error('Réponse invalide du serveur');
@@ -64,7 +47,8 @@ class AuthService {
     try {
       const response = await axios.post(`${API_URL}/auth/register`, credentials);
       
-      if (response.data.success) {
+      if (response.data.success && response.data.user) {
+        this.user = response.data.user;
         return response.data.user;
       } else {
         throw new Error('Réponse invalide du serveur');
@@ -77,14 +61,23 @@ class AuthService {
   // Se déconnecter
   async logout(): Promise<void> {
     try {
-      // Appeler une route de déconnexion côté serveur pour invalider le cookie
       await axios.post(`${API_URL}/auth/logout`);
-      
-      // Rediriger vers la page de connexion
+      this.user = null;
       window.location.href = '/auth';
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
       window.location.href = '/auth';
+    }
+  }
+
+  // Rafraîchir le token
+  async refreshToken(): Promise<boolean> {
+    try {
+      const response = await axios.post(`${API_URL}/auth/refresh`);
+      return response.data.success === true;
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement du token:', error);
+      return false;
     }
   }
 
@@ -103,7 +96,8 @@ class AuthService {
   async updateProfile(data: UpdateProfileData): Promise<User> {
     try {
       const response = await axios.put(`${API_URL}/users/profile`, data);
-      if (response.data.success) {
+      if (response.data.success && response.data.user) {
+        this.user = response.data.user;
         return response.data.user;
       }
       throw new Error('Mise à jour du profil échouée');

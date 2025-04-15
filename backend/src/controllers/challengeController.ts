@@ -248,9 +248,28 @@ export const getChallengeById = async (req: Request, res: Response) => {
     const { id } = req.params;
     const challenge = await prisma.challenge.findUnique({
       where: { id },
-      include: {
-        resources: true,
-        category: true
+      select: {
+        id: true,
+        title: true,
+        subtitle: true,
+        description: true,
+        difficulty: true,
+        points: true,
+        type: true,
+        categoryId: true,
+        url: true,
+        imageb64: true,
+        fileb64: true,
+        resources: {
+          select: {
+            id: true,
+            type: true,
+            value: true,
+            name: true,
+            mimeType: true,
+            size: true
+          }
+        }
       }
     });
 
@@ -261,9 +280,20 @@ export const getChallengeById = async (req: Request, res: Response) => {
       });
     }
 
+    // Filtrer les champs en fonction du type
+    const { url, imageb64, fileb64, ...baseChallenge } = challenge;
+    const typeSpecificData = {
+      ...(challenge.type === 'URL' && { url }),
+      ...(challenge.type === 'IMAGE' && { imageb64 }),
+      ...(challenge.type === 'FILE' && { fileb64 })
+    };
+
     res.json({
       success: true,
-      data: challenge
+      data: {
+        ...baseChallenge,
+        ...typeSpecificData
+      }
     });
   } catch (error) {
     res.status(500).json({ 
@@ -446,6 +476,100 @@ export const deleteChallenge = async (req: Request, res: Response) => {
     res.status(500).json({ 
       success: false,
       message: "Erreur lors de la suppression du challenge" 
+    });
+  }
+};
+
+// Vérifier le flag d'un challenge
+export const verifyFlag = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { flag } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Vous devez être connecté pour soumettre un flag"
+      });
+    }
+
+    if (!flag) {
+      return res.status(400).json({
+        success: false,
+        message: "Le flag est requis"
+      });
+    }
+
+    // Récupérer le challenge avec ses informations
+    const challenge = await prisma.challenge.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        flag: true,
+        points: true,
+        solves: {
+          where: {
+            userId: userId
+          }
+        }
+      }
+    });
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: "Challenge non trouvé"
+      });
+    }
+
+    // Vérifier si l'utilisateur a déjà résolu ce challenge
+    if (challenge.solves.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Vous avez déjà résolu ce challenge"
+      });
+    }
+
+    // Vérifier le flag
+    if (challenge.flag !== flag) {
+      return res.status(400).json({
+        success: false,
+        message: "Flag incorrect"
+      });
+    }
+
+    // Ajouter les points et enregistrer la résolution dans une transaction
+    await prisma.$transaction(async (tx) => {
+      // Créer l'entrée de résolution
+      await tx.solve.create({
+        data: {
+          userId: userId,
+          challengeId: challenge.id
+        }
+      });
+
+      // Mettre à jour le score de l'utilisateur
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          score: {
+            increment: challenge.points
+          }
+        }
+      });
+    });
+
+    res.json({
+      success: true,
+      message: "Félicitations ! Flag correct",
+      points: challenge.points
+    });
+  } catch (error) {
+    console.error('Erreur lors de la vérification du flag:', error);
+    res.status(500).json({
+      success: false,
+      message: "Erreur lors de la vérification du flag"
     });
   }
 }; 

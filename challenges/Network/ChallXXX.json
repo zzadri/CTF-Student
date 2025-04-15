@@ -1,0 +1,15 @@
+{
+    "title": "Titre_du_challenge",
+    "subtitle": "Sous_titre_du_challenge",
+    "description": "Description_du_challenge",
+    "flag": "CTF{Flag_du_challenge}",
+    "category": "Reseau",
+    "difficulty": "Difficulté_du_challenge",
+    "points": 0,
+    "type": "FILE",
+    "files": [
+        {
+            "name": "Nom_du_fichier"
+        }
+    ]
+}

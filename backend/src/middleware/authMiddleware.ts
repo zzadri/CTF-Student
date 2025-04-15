@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { tokenBlacklist } from '../utils/tokenBlacklist';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+let JWT_SECRET = process.env.JWT_SECRET as string;
+
 const prisma = new PrismaClient();
 
 interface JwtPayload {

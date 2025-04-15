@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 import { LoginBody, RegisterBody } from '../interfaces/auth.interface';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
 const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000; // 24 heures en millisecondes
 
 export const register = async (req: Request<{}, {}, RegisterBody>, res: Response) => {
@@ -81,7 +80,7 @@ export const register = async (req: Request<{}, {}, RegisterBody>, res: Response
         userId: user.id,
         role: user.role
       },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -190,7 +189,7 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
         userId: user.id,
         role: user.role
       },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 

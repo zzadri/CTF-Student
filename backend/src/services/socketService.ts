@@ -3,6 +3,7 @@ import { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { parse } from 'cookie';
 
+let JWT_SECRET = process.env.JWT_SECRET as string;
 let socketService: SocketService | null = null;
 
 export class SocketService {
@@ -49,7 +50,7 @@ export class SocketService {
           return next(new Error('Token d\'authentification manquant'));
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        const decoded = jwt.verify(token, JWT_SECRET);
         socket.data.user = decoded;
         next();
       } catch (error) {

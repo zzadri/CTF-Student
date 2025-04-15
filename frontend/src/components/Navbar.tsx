@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { NotificationCenter } from './NotificationCenter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faTrophy, faFlag, faChevronRight, faShieldAlt, faUser, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
@@ -16,9 +16,16 @@ interface NavbarProps {
 export function Navbar({ categories, loading, selectedCategory, onCategorySelect }: NavbarProps) {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const getIconColor = (color: string | null) => {
     return color?.replace('bg-', 'text-') || 'text-gray-300';
+  };
+
+  const handleCategorySelect = (categoryId: string) => {
+    onCategorySelect(categoryId);
+    navigate(`/categories/${categoryId}`);
+    setIsMenuOpen(false);
   };
 
   const renderCategoriesContent = () => {
@@ -41,7 +48,7 @@ export function Navbar({ categories, loading, selectedCategory, onCategorySelect
     return categories.map((category) => (
       <button 
         key={category.id}
-        onClick={() => onCategorySelect(category.id)}
+        onClick={() => handleCategorySelect(category.id)}
         className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-700 ${
           selectedCategory === category.id ? 'bg-gray-700 text-white' : 'text-gray-300'
         }`}

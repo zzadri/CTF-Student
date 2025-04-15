@@ -1,5 +1,5 @@
 import axios, { API_URL } from './axios.config';
-import { normalizeResponse, handleError } from './api.service';
+import { handleError } from './api.service';
 import { User, LoginCredentials, RegisterCredentials, UpdateProfileData } from '../types/auth.types';
 
 class AuthService {

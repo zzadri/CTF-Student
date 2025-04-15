@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { apiService, Category } from '../services/api.service';
 import { usersService, PublicProfile as UserProfile } from '../services/users.service';
-import type { Challenge, Badge, PublicProfile as IPublicProfile } from '../types/profile.types';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -58,7 +57,7 @@ export default function PublicProfile() {
       <div className="flex min-h-screen bg-gray-900">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-white text-xl">
-            {error || 'Profil non trouvé'}
+            {error ?? 'Profil non trouvé'}
           </div>
         </div>
       </div>

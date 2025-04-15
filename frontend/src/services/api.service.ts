@@ -161,20 +161,20 @@ class ApiService {
         
         return {
           success: true,
-          message: data.message || 'Félicitations ! Flag correct',
+          message: data.message ?? 'Félicitations ! Flag correct',
           points: data.points
         };
       }
 
       return {
         success: false,
-        message: data.message || 'Flag incorrect'
+        message: data.message ?? 'Flag incorrect'
       };
     } catch (error: any) {
       if (error.response?.status === 400) {
         return {
           success: false,
-          message: error.response.data.message || 'Flag incorrect ou challenge déjà résolu'
+          message: error.response.data.message ?? 'Flag incorrect ou challenge déjà résolu'
         };
       }
       if (error.response?.status === 401) {

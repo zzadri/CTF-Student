@@ -463,19 +463,70 @@ export const deleteChallenge = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Supprimer le challenge (la ressource sera supprimée en cascade)
-    await prisma.challenge.delete({
-      where: { id }
+    // Vérifier d'abord si le challenge existe
+    const challenge = await prisma.challenge.findUnique({
+      where: { id },
+      include: {
+        solves: true
+      }
+    });
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: "Challenge non trouvé"
+      });
+    }
+
+    // Supprimer le challenge et toutes ses relations dans une transaction
+    await prisma.$transaction(async (tx) => {
+      // 1. Supprimer les résolutions (solves) et mettre à jour les scores des utilisateurs
+      for (const solve of challenge.solves) {
+        await tx.user.update({
+          where: { id: solve.userId },
+          data: {
+            score: {
+              decrement: challenge.points
+            }
+          }
+        });
+      }
+      
+      // 2. Supprimer toutes les résolutions
+      await tx.solve.deleteMany({
+        where: { challengeId: id }
+      });
+
+      // 3. Supprimer les ressources
+      await tx.resource.deleteMany({
+        where: { challengeId: id }
+      });
+
+      // 4. Supprimer le challenge
+      await tx.challenge.delete({
+        where: { id }
+      });
     });
 
     res.json({ 
       success: true,
-      message: "Challenge supprimé avec succès" 
+      message: "Challenge et toutes ses données associées supprimés avec succès" 
     });
   } catch (error) {
+    console.error('Erreur lors de la suppression du challenge:', error);
+    
+    // Gestion des différents types d'erreurs
+    if (error instanceof Error) {
+      return res.status(500).json({ 
+        success: false,
+        message: "Erreur lors de la suppression du challenge",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+    
     res.status(500).json({ 
       success: false,
-      message: "Erreur lors de la suppression du challenge" 
+      message: "Une erreur inattendue est survenue" 
     });
   }
 };

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
-import { LoadingOverlay, Badge, Button, Paper, TextInput, Text } from '@mantine/core';
+import { LoadingOverlay, Button, Paper, TextInput, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faFlag, faLock, faUnlock } from '@fortawesome/free-solid-svg-icons';
-import { apiService, Category, Challenge, Resource } from '../services/api.service';
+import { apiService, Category, Challenge } from '../services/api.service';
 import { FlagSubmissionStatus } from '../types/challenge.types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -124,23 +124,6 @@ export default function ChallengePage() {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'EZ':
-        return 'green';
-      case 'EASY':
-        return 'teal';
-      case 'NORMAL':
-        return 'yellow';
-      case 'HARD':
-        return 'orange';
-      case 'EXPERT':
-        return 'red';
-      default:
-        return 'gray';
-    }
-  };
-
   const renderResources = () => {
     if (!challenge?.resources || challenge.resources.length === 0) {
       return <p className="text-gray-400">Aucune ressource disponible</p>;
@@ -157,7 +140,7 @@ export default function ChallengePage() {
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 hover:underline block truncate"
               >
-                {resource.name || resource.value}
+                {resource.name ?? resource.value}
               </a>
             ) : (
               <a 
@@ -166,7 +149,7 @@ export default function ChallengePage() {
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 hover:underline block truncate"
               >
-                {resource.name || 'Télécharger le fichier'}
+                {resource.name ?? 'Télécharger le fichier'}
               </a>
             )}
           </div>

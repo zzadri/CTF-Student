@@ -124,6 +124,8 @@ export default function ChallengePage() {
     }
   };
 
+  console.log(challenge);
+
   const renderResources = () => {
     if (!challenge?.resources || challenge.resources.length === 0) {
       return <p className="text-gray-400">Aucune ressource disponible</p>;
@@ -156,6 +158,20 @@ export default function ChallengePage() {
         ))}
       </div>
     );
+  };
+
+  const isString = (value: unknown): value is string => {
+    return typeof value === 'string';
+  };
+
+  const renderFormattedDescription = (text: string): React.ReactNode => {
+    return text.split('`').map((segment, index) => {
+      if (index % 2 === 0) {
+        return segment;
+      } else {
+        return <code key={index} className="bg-gray-700 px-1 rounded">{segment}</code>;
+      }
+    });
   };
 
   return (
@@ -226,11 +242,15 @@ export default function ChallengePage() {
                   {/* Description */}
                   <Paper className="bg-gray-800 p-6 rounded-lg">
                     <h2 className="text-xl font-semibold text-white mb-4">Description</h2>
-                    <div className="text-gray-300 prose prose-invert max-w-none">
-                      {challenge.description.split('\n').map((paragraph, idx) => (
-                        paragraph.trim() ? <p key={idx} className="mb-3 last:mb-0">{paragraph}</p> : <br key={idx} />
-                      ))}
-                    </div>
+                    {isString(challenge.description) ? (
+                      <div className="text-gray-300 mt-4 space-y-4">
+                        {renderFormattedDescription(challenge.description)}
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 mt-4">
+                        Aucune description disponible
+                      </div>
+                    )}
                   </Paper>
 
                   {/* Zone de soumission du flag */}
@@ -327,6 +347,32 @@ export default function ChallengePage() {
                       </div>
                     </Paper>
                   )}
+
+                  {challenge.type === 'FILE' && (
+                    <Paper className="bg-gray-800 p-6 rounded-lg mb-6">
+                      <h2 className="text-xl font-semibold text-white mb-4">Fichier à télécharger</h2>
+                      <Button
+                        fullWidth
+                        color="blue"
+                        size="md"
+                        onClick={() => {
+                          const byteArray = Uint8Array.from(atob(challenge.fileb64!), c => c.charCodeAt(0));
+                          const blob = new Blob([byteArray]);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = challenge.filename || 'challenge-file';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                      >
+                        Télécharger le fichier
+                      </Button>
+                    </Paper>
+                  )}
+
 
                   {/* Ressources */}
                   <Paper className="bg-gray-800 p-6 rounded-lg">

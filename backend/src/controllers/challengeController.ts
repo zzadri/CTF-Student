@@ -106,7 +106,7 @@ export const createChallenge = async (req: Request, res: Response) => {
     if (!input.title || !input.description || !input.difficulty || !input.points || !input.flag || !input.categoryId || !input.type) {
       return res.status(400).json({ 
         success: false,
-        message: "Tous les champs requis doivent être remplis" 
+        message: "Tous les champs requis doivent être remplis"
       });
     }
 
@@ -260,6 +260,7 @@ export const getChallengeById = async (req: Request, res: Response) => {
         url: true,
         imageb64: true,
         fileb64: true,
+        filename: true,
         resources: {
           select: {
             id: true,

@@ -84,6 +84,21 @@ export default function CategoryChallengesPage() {
     );
   };
 
+  // Ordre personnalisé des niveaux de difficulté
+const difficultyOrder: { [key: string]: number } = {
+  EZ: 0,
+  EASY: 1,
+  NORMAL: 2,
+  HARD: 3,
+  EXPERT: 4
+};
+
+// Trie les challenges par difficulté
+const sortedChallenges = [...challenges].sort(
+  (a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
+);
+
+
   return (
     <div className="flex h-screen bg-gray-900">
       <Navbar 
@@ -132,7 +147,7 @@ export default function CategoryChallengesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {challenges.map((challenge) => (
+              {sortedChallenges.map((challenge) => (
                 <button 
                   key={challenge.id}
                   className="relative cursor-pointer bg-gray-800 rounded overflow-hidden shadow-md hover:bg-gray-700/80 transition-all text-left w-full block"

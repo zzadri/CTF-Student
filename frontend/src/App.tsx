@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
-import AuthPage from './pages/AuthPage';
 import ChallengesPage from './pages/ChallengesPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
@@ -13,6 +12,7 @@ import RegisterPage from './pages/RegisterPage';
 import AdminPage from './pages/AdminPage';
 import CategoryChallengesPage from './pages/CategoryChallengesPage';
 import ChallengePage from './pages/ChallengePage';
+import ErrorPage from './pages/ErrorPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -80,10 +80,12 @@ function AppRoutes() {
       <Route
         path="/auth"
         element={user ? <Navigate to="/" /> : <LoginPage />}
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/register"
         element={user ? <Navigate to="/" /> : <RegisterPage />}
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/"
@@ -92,6 +94,7 @@ function AppRoutes() {
             <ChallengesPage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/profile"
@@ -100,6 +103,7 @@ function AppRoutes() {
             <ProfilePage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/leaderboard"
@@ -108,6 +112,7 @@ function AppRoutes() {
             <LeaderboardPage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/challenges"
@@ -116,6 +121,7 @@ function AppRoutes() {
             <ChallengesPage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/categories/:categoryId"
@@ -124,6 +130,7 @@ function AppRoutes() {
             <CategoryChallengesPage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
       <Route
         path="/challenges/:id"
@@ -132,8 +139,13 @@ function AppRoutes() {
             <ChallengePage />
           </ProtectedRoute>
         }
+        errorElement={<ErrorPage />}
       />
-      <Route path="/users/:userId" element={<PublicProfile />} />
+      <Route 
+        path="/users/:userId" 
+        element={<PublicProfile />}
+        errorElement={<ErrorPage />}
+      />
       <Route
         path="/admin"
         element={
@@ -141,7 +153,11 @@ function AppRoutes() {
             <AdminPage />
           </AdminRoute>
         }
+        errorElement={<ErrorPage />}
       />
+      
+      {/* Route pour attraper les 404 */}
+      <Route path="*" element={<ErrorPage />} />
     </Routes>
   );
 }

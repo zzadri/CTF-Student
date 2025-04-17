@@ -28,3 +28,6 @@ Thumbs.db
 
 # Challenges
 challenges/Network/*/*.json
+challenges/Web/*/*.json
+challenges/Cryptanalyst/*/*.json
+challenges/Forensics/*/*.json

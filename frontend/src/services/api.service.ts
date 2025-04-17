@@ -35,6 +35,9 @@ export interface Challenge {
   type: 'URL' | 'FILE' | 'IMAGE';
   url?: string;
   imageb64?: string;
+  fileb64?: string;
+  filename?: string;
+  fileType?: string;
 }
 
 export interface Resource {

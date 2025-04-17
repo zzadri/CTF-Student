@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <style>
+    .text { fill: #ffffff; font-family: Arial, sans-serif; font-weight: bold; }
+    .large-text { font-size: 64px; }
+    .small-text { font-size: 24px; }
+    .bg-element { fill: #ef4444; opacity: 0.1; }
+    .accent { fill: #ef4444; }
+  </style>
+  
+  <!-- Background elements -->
+  <rect x="100" y="70" width="200" height="160" rx="15" class="bg-element" />
+  <circle cx="200" cy="150" r="100" class="bg-element" />
+  
+  <!-- Main content -->
+  <text x="200" y="150" text-anchor="middle" class="text large-text">500</text>
+  <text x="200" y="190" text-anchor="middle" class="text small-text">Erreur serveur</text>
+  
+  <!-- Decorative elements -->
+  <path d="M150,80 L250,80" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
+  <path d="M150,220 L250,220" stroke="#ef4444" stroke-width="4" stroke-linecap="round" />
+  <path d="M200,80 L200,220" stroke="#ef4444" stroke-width="4" stroke-linecap="round" stroke-dasharray="5,5" />
+</svg> 

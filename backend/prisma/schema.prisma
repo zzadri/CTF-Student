@@ -47,6 +47,7 @@ enum ChallengeType {
   URL
   IMAGE
   FILE
+  TEXT
 }
 
 enum ResourceType {
@@ -74,6 +75,7 @@ model Challenge {
   url         String?       // Pour les challenges de type URL
   imageb64    String?       // Pour les challenges de type IMAGE
   fileb64     String?       // Pour les challenges de type FILE
+  filename    String?
   categoryId  String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

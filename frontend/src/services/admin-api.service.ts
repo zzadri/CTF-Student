@@ -50,7 +50,7 @@ class AdminApiService {
   // Créer une nouvelle catégorie
   async createCategory(category: Partial<Category>): Promise<Category> {
     try {
-      const response = await axios.post(`${API_URL}/categories`, category);
+      const response = await axios.post(`${API_URL}/admin/categories`, category);
       return normalizeResponse(response.data);
     } catch (error) {
       return handleError(error, 'Erreur lors de la création de la catégorie');
@@ -60,7 +60,7 @@ class AdminApiService {
   // Mettre à jour une catégorie
   async updateCategory(categoryId: string, category: Partial<Category>): Promise<Category> {
     try {
-      const response = await axios.put(`${API_URL}/categories/${categoryId}`, category);
+      const response = await axios.put(`${API_URL}/admin/categories/${categoryId}`, category);
       return normalizeResponse(response.data);
     } catch (error) {
       return handleError(error, 'Erreur lors de la mise à jour de la catégorie');
@@ -70,7 +70,7 @@ class AdminApiService {
   // Supprimer une catégorie
   async deleteCategory(categoryId: string): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/categories/${categoryId}`);
+      await axios.delete(`${API_URL}/admin/categories/${categoryId}`);
     } catch (error) {
       handleError(error, 'Erreur lors de la suppression de la catégorie');
     }
@@ -81,7 +81,7 @@ class AdminApiService {
   // Créer un nouveau challenge
   async createChallenge(challenge: FormData): Promise<Challenge> {
     try {
-      const response = await axios.post(`${API_URL}/challenges`, challenge, {
+      const response = await axios.post(`${API_URL}/admin/challenges`, challenge, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -95,7 +95,7 @@ class AdminApiService {
   // Mettre à jour un challenge
   async updateChallenge(challengeId: string, challenge: FormData): Promise<Challenge> {
     try {
-      const response = await axios.put(`${API_URL}/challenges/${challengeId}`, challenge, {
+      const response = await axios.put(`${API_URL}/admin/challenges/${challengeId}`, challenge, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -109,7 +109,7 @@ class AdminApiService {
   // Supprimer un challenge
   async deleteChallenge(challengeId: string): Promise<void> {
     try {
-      await axios.delete(`${API_URL}/challenges/${challengeId}`);
+      await axios.delete(`${API_URL}/admin/challenges/${challengeId}`);
     } catch (error) {
       handleError(error, 'Erreur lors de la suppression du challenge');
     }

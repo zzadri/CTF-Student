@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <style>
+    .text { fill: #ffffff; font-family: Arial, sans-serif; font-weight: bold; }
+    .large-text { font-size: 64px; }
+    .small-text { font-size: 24px; }
+    .bg-element { fill: #3b82f6; opacity: 0.1; }
+    .accent { fill: #3b82f6; }
+  </style>
+  
+  <!-- Background elements -->
+  <circle cx="200" cy="150" r="120" class="bg-element" />
+  <rect x="140" y="50" width="120" height="200" rx="10" class="bg-element" />
+  
+  <!-- Main content -->
+  <text x="200" y="150" text-anchor="middle" class="text large-text">404</text>
+  <text x="200" y="190" text-anchor="middle" class="text small-text">Page non trouvée</text>
+  
+  <!-- Decorative elements -->
+  <path d="M120,230 L280,230" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" />
+  <circle cx="120" cy="80" r="10" class="accent" />
+  <circle cx="280" cy="80" r="10" class="accent" />
+</svg> 

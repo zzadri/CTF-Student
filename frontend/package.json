@@ -19,7 +19,7 @@
     "@mantine/hooks": "^7.17.4",
     "@mantine/notifications": "^7.17.4",
     "@prisma/client": "^6.6.0",
-    "@tanstack/react-query": "^5.72.2",
+    "@tanstack/react-query": "^5.74.0",
     "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "ctf_student": "file:",

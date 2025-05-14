@@ -34,7 +34,7 @@
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "zod": "^3.22.4"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

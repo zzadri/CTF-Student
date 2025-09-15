@@ -20,7 +20,7 @@
     "@mantine/notifications": "^7.17.4",
     "@prisma/client": "^6.6.0",
     "@tanstack/react-query": "^5.72.2",
-    "axios": "^1.8.4",
+    "axios": "^1.12.0",
     "bcryptjs": "^3.0.2",
     "ctf_student": "file:",
     "date-fns": "^4.1.0",
